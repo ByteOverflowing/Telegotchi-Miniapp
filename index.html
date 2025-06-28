@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="telegram-web-app-cloud-storage" content="true">
-    <title>Tamagotchi MiniApp</title>
+    <title>Tamagotchi Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="container">
-        <header>
+        <div class="header">
+            <div class="currency">💰 $<span id="money">100</span></div>
             <h1 id="pet-name">Tamagotchi</h1>
             <div id="pet-state" class="state happy">😊 Feliz</div>
-        </header>
+        </div>
         
-        <div class="pet-container">
+        <div class="pet-container" id="pet-container">
             <div id="pet" class="pet egg"></div>
         </div>
+        
+        <div class="energy-time">⏳ Recuperación completa: <span id="recovery-time">0h 0m</span></div>
         
         <div class="stats">
             <div class="stat">
@@ -54,7 +57,7 @@
             <div>🏷️ Nombre: <span id="info-name">Tammy</span></div>
             <div>🎂 Edad: <span id="info-age">0</span> días</div>
             <div>⚖️ Peso: <span id="info-weight">5</span> kg</div>
-            <div>🔵 Estado: <span id="info-state">Huevo</span></div>
+            <div>📦 Inventario: <span id="inventory-count">0</span> items</div>
         </div>
         
         <div class="actions">
@@ -62,7 +65,40 @@
             <button id="play-btn" class="btn">⚽ Jugar</button>
             <button id="sleep-btn" class="btn">🛌 Dormir</button>
             <button id="clean-btn" class="btn">🚿 Limpiar</button>
+            <button id="shop-btn" class="btn">🛒 Tienda</button>
+            <button id="work-btn" class="btn">💼 Trabajar</button>
             <button id="revive-btn" class="btn hidden">💖 Revivir</button>
+        </div>
+        
+        <div id="shop" class="shop hidden">
+            <h3>🛒 Tienda</h3>
+            <div class="shop-items">
+                <div class="item" data-cost="10" data-hunger="20" data-type="food">
+                    🍎 Manzana (+20 energía) - $10
+                </div>
+                <div class="item" data-cost="30" data-hunger="50" data-type="food">
+                    🍔 Hamburguesa (+50 energía) - $30
+                </div>
+                <div class="item" data-cost="20" data-energy="30" data-type="food">
+                    ☕ Café (+30 energía) - $20
+                </div>
+                <div class="item" data-cost="50" data-happiness="30" data-type="toy">
+                    🧸 Peluche (+30 felicidad) - $50
+                </div>
+                <div class="item" data-cost="100" data-type="collectible" data-name="trofeo">
+                    🏆 Trofeo (Coleccionable) - $100
+                </div>
+            </div>
+        </div>
+        
+        <div id="work-minigame" class="minigame hidden">
+            <h3>💼 Trabajar</h3>
+            <p>Haz clic rápido para ganar dinero</p>
+            <div class="work-progress">
+                <div class="work-bar" id="work-bar"></div>
+            </div>
+            <p>Dinero ganado: $<span id="work-earned">0</span></p>
+            <button id="work-stop" class="btn">Terminar</button>
         </div>
         
         <div class="init-form hidden" id="init-form">

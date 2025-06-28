@@ -13,11 +13,22 @@ class Tamagotchi {
         this.weight = 5;
         this.stage = "egg";
         this.isAlive = true;
+        this.money = 100;
+        this.inventory = [];
+        this.lastEnergyRecovery = new Date();
+        this.tapsToday = 0;
+        this.lastTapDate = new Date().toDateString();
     }
     
     update() {
         const now = new Date();
         const hoursPassed = (now - this.lastUpdate) / (1000 * 60 * 60);
+        
+        // Reset taps if new day
+        if (now.toDateString() !== this.lastTapDate) {
+            this.tapsToday = 0;
+            this.lastTapDate = now.toDateString();
+        }
         
         if (this.isAlive) {
             if (!this.isSleeping) {
@@ -32,16 +43,19 @@ class Tamagotchi {
             
             this.age = (now - this.birthDate) / (1000 * 60 * 60 * 24);
             
+            // Evolución
             if (this.age >= 3 && this.stage === "egg") {
                 this.stage = "baby";
             } else if (this.age >= 7 && this.stage === "baby") {
                 this.stage = "adult";
             }
             
+            // Verificar muerte
             if (this.hunger >= 100 || this.happiness <= 0 || this.energy <= 0) {
                 this.isAlive = false;
                 this.state = "dead";
             } else {
+                // Actualizar estado
                 if (this.isSleeping) {
                     this.state = "sleepy";
                 } else if (this.hunger > 70) {
@@ -59,10 +73,10 @@ class Tamagotchi {
         this.lastUpdate = now;
     }
     
-    feed() {
+    feed(amount = 30) {
         if (!this.isAlive) return false;
-        this.hunger = Math.max(0, this.hunger - 30);
-        this.weight = Math.min(20, this.weight + 1);
+        this.hunger = Math.max(0, this.hunger - amount);
+        this.weight = Math.min(20, this.weight + (amount / 10));
         this.update();
         return true;
     }
@@ -79,6 +93,7 @@ class Tamagotchi {
     sleep() {
         if (!this.isAlive) return false;
         this.isSleeping = !this.isSleeping;
+        if (this.isSleeping) this.lastEnergyRecovery = new Date();
         this.update();
         return true;
     }
@@ -103,6 +118,53 @@ class Tamagotchi {
         return true;
     }
     
+    collectMoney() {
+        const now = new Date();
+        const hoursPassed = (now - this.lastEnergyRecovery) / (1000 * 60 * 60);
+        if (hoursPassed >= 1) {
+            this.money += Math.floor(hoursPassed) * 5;
+            this.lastEnergyRecovery = now;
+            return true;
+        }
+        return false;
+    }
+    
+    buyItem(item) {
+        if (this.money >= item.cost) {
+            this.money -= item.cost;
+            
+            if (item.type === 'food') {
+                this.feed(item.hunger || 20);
+            } else if (item.type === 'toy') {
+                this.happiness = Math.min(100, this.happiness + (item.happiness || 20));
+            } else if (item.type === 'collectible') {
+                this.inventory.push({
+                    name: item.name || 'Item',
+                    type: 'collectible',
+                    date: new Date()
+                });
+            }
+            
+            return true;
+        }
+        return false;
+    }
+    
+    calculateRecoveryTime() {
+        if (this.isSleeping) {
+            const missingEnergy = 100 - this.energy;
+            const minutes = Math.ceil(missingEnergy / 2); // 2% por minuto
+            return minutes;
+        }
+        return 0;
+    }
+    
+    work(clickPower = 1) {
+        const earnings = clickPower * 2;
+        this.money += earnings;
+        return earnings;
+    }
+    
     toJSON() {
         return {
             name: this.name,
@@ -117,7 +179,12 @@ class Tamagotchi {
             age: this.age,
             weight: this.weight,
             stage: this.stage,
-            isAlive: this.isAlive
+            isAlive: this.isAlive,
+            money: this.money,
+            inventory: this.inventory,
+            lastEnergyRecovery: this.lastEnergyRecovery.getTime(),
+            tapsToday: this.tapsToday,
+            lastTapDate: this.lastTapDate
         };
     }
     
@@ -135,18 +202,25 @@ class Tamagotchi {
         pet.weight = json.weight;
         pet.stage = json.stage;
         pet.isAlive = json.isAlive;
+        pet.money = json.money || 100;
+        pet.inventory = json.inventory || [];
+        pet.lastEnergyRecovery = new Date(json.lastEnergyRecovery || Date.now());
+        pet.tapsToday = json.tapsToday || 0;
+        pet.lastTapDate = json.lastTapDate || new Date().toDateString();
         return pet;
     }
 }
 
 let pet = null;
 let tg = null;
+let workInterval = null;
+let workEarnings = 0;
 
 async function savePetData() {
     const data = JSON.stringify(pet);
     
     try {
-        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.CloudStorage) {
+        if (window.Telegram?.WebApp?.CloudStorage) {
             await Telegram.WebApp.CloudStorage.setItem('tamagotchi', data);
         }
         localStorage.setItem('tamagotchi', data);
@@ -157,7 +231,7 @@ async function savePetData() {
 
 async function loadPetData() {
     try {
-        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.CloudStorage) {
+        if (window.Telegram?.WebApp?.CloudStorage) {
             return new Promise((resolve) => {
                 Telegram.WebApp.CloudStorage.getItem('tamagotchi', (err, value) => {
                     if (!err && value) {
@@ -183,6 +257,8 @@ function showInitForm() {
     document.querySelector('.stats').classList.add('hidden');
     document.querySelector('.info').classList.add('hidden');
     document.querySelector('.actions').classList.add('hidden');
+    document.getElementById('shop').classList.add('hidden');
+    document.getElementById('work-minigame').classList.add('hidden');
 }
 
 async function createPet() {
@@ -239,10 +315,21 @@ function getStageText(stage) {
 }
 
 function showMessage(text) {
-    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showAlert) {
+    if (window.Telegram?.WebApp?.showAlert) {
         Telegram.WebApp.showAlert(text);
     } else {
         alert(text);
+    }
+}
+
+function updateRecoveryTime() {
+    if (pet.isSleeping) {
+        const minutes = pet.calculateRecoveryTime();
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        document.getElementById('recovery-time').textContent = `${hours}h ${mins}m`;
+    } else {
+        document.getElementById('recovery-time').textContent = "No está durmiendo";
     }
 }
 
@@ -265,6 +352,10 @@ async function renderPet() {
     document.getElementById('info-age').textContent = pet.age.toFixed(1);
     document.getElementById('info-weight').textContent = pet.weight;
     document.getElementById('info-state').textContent = getStageText(pet.stage);
+    document.getElementById('money').textContent = pet.money;
+    document.getElementById('inventory-count').textContent = pet.inventory.length;
+    
+    updateRecoveryTime();
     
     const petElement = document.getElementById('pet');
     petElement.className = 'pet';
@@ -285,11 +376,54 @@ async function renderPet() {
     document.getElementById('sleep-btn').textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
 }
 
+function startWork() {
+    document.getElementById('work-minigame').classList.remove('hidden');
+    workEarnings = 0;
+    let workProgress = 0;
+    
+    const updateWorkBar = () => {
+        workProgress = Math.min(100, workProgress + 5);
+        document.getElementById('work-bar').style.width = `${workProgress}%`;
+        
+        if (workProgress >= 100) {
+            workEarnings += 10;
+            document.getElementById('work-earned').textContent = workEarnings;
+            workProgress = 0;
+        }
+    };
+    
+    document.getElementById('work-bar').onclick = () => {
+        workEarnings += pet.work();
+        document.getElementById('work-earned').textContent = workEarnings;
+        updateWorkBar();
+    };
+    
+    workInterval = setInterval(() => {
+        workProgress = Math.max(0, workProgress - 1);
+        document.getElementById('work-bar').style.width = `${workProgress}%`;
+    }, 500);
+}
+
+function stopWork() {
+    clearInterval(workInterval);
+    pet.money += workEarnings;
+    document.getElementById('work-minigame').classList.add('hidden');
+    renderPet();
+    showMessage(`¡Ganaste $${workEarnings}!`);
+}
+
 async function initApp() {
     tg = window.Telegram.WebApp;
     if (tg) {
         tg.expand();
         tg.enableClosingConfirmation();
+    }
+    
+    // Migrar datos antiguos
+    const oldLocalData = localStorage.getItem('tamagotchi');
+    if (oldLocalData && !await loadPetData()) {
+        await savePetData(JSON.parse(oldLocalData));
+        localStorage.removeItem('tamagotchi');
     }
     
     const savedPet = await loadPetData();
@@ -302,6 +436,7 @@ async function initApp() {
         showInitForm();
     }
     
+    // Configurar eventos
     document.getElementById('feed-btn').addEventListener('click', async () => {
         if (pet.feed()) {
             showMessage("🍔 Has alimentado a tu Tamagotchi!");
@@ -338,7 +473,62 @@ async function initApp() {
         }
     });
     
+    document.getElementById('shop-btn').addEventListener('click', () => {
+        document.getElementById('shop').classList.toggle('hidden');
+    });
+    
+    document.getElementById('work-btn').addEventListener('click', startWork);
+    document.getElementById('work-stop').addEventListener('click', stopWork);
+    
     document.getElementById('create-btn').addEventListener('click', createPet);
+    
+    document.getElementById('pet-container').addEventListener('click', async () => {
+        const petElement = document.getElementById('pet');
+        petElement.classList.add('shake');
+        
+        if (pet.isAlive && pet.tapsToday < 5) {
+            pet.money += 2;
+            pet.tapsToday++;
+            showMessage("+$2 por jugar con tu mascota!");
+            await renderPet();
+        }
+        
+        setTimeout(() => {
+            petElement.classList.remove('shake');
+        }, 500);
+    });
+    
+    document.querySelectorAll('.item').forEach(item => {
+        item.addEventListener('click', async () => {
+            const cost = parseInt(item.dataset.cost);
+            const itemData = {
+                cost: cost,
+                type: item.dataset.type,
+                hunger: parseInt(item.dataset.hunger) || 0,
+                happiness: parseInt(item.dataset.happiness) || 0,
+                name: item.dataset.name || item.textContent.trim()
+            };
+            
+            if (pet.buyItem(itemData)) {
+                showMessage(`¡Compra realizada! ${item.textContent.trim()}`);
+                await renderPet();
+            } else {
+                showMessage("No tienes suficiente dinero");
+            }
+        });
+    });
+    
+    // Generar dinero pasivo
+    setInterval(async () => {
+        if (pet?.collectMoney()) {
+            await renderPet();
+        }
+    }, 60000);
+    
+    // Actualizar tiempo de recuperación
+    setInterval(() => {
+        if (pet) updateRecoveryTime();
+    }, 60000);
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
