@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamagotchi MiniApp</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="pet-name">Tamagotchi</h1>
+            <div id="pet-state" class="state happy">😊 Feliz</div>
+        </header>
+        
+        <div class="pet-container">
+            <div id="pet" class="pet egg"></div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <span>🍔 Hambre:</span>
+                <div class="bar-container">
+                    <div id="hunger-bar" class="bar"></div>
+                    <span id="hunger-value">50%</span>
+                </div>
+            </div>
+            <div class="stat">
+                <span>😊 Felicidad:</span>
+                <div class="bar-container">
+                    <div id="happiness-bar" class="bar"></div>
+                    <span id="happiness-value">70%</span>
+                </div>
+            </div>
+            <div class="stat">
+                <span>⚡ Energía:</span>
+                <div class="bar-container">
+                    <div id="energy-bar" class="bar"></div>
+                    <span id="energy-value">80%</span>
+                </div>
+            </div>
+            <div class="stat">
+                <span>🧼 Limpieza:</span>
+                <div class="bar-container">
+                    <div id="cleanliness-bar" class="bar"></div>
+                    <span id="cleanliness-value">90%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info">
+            <div>🏷️ Nombre: <span id="info-name">Tammy</span></div>
+            <div>🎂 Edad: <span id="info-age">0</span> días</div>
+            <div>⚖️ Peso: <span id="info-weight">5</span> kg</div>
+            <div>🔵 Estado: <span id="info-state">Huevo</span></div>
+        </div>
+        
+        <div class="actions">
+            <button id="feed-btn" class="btn">🍔 Alimentar</button>
+            <button id="play-btn" class="btn">⚽ Jugar</button>
+            <button id="sleep-btn" class="btn">🛌 Dormir</button>
+            <button id="clean-btn" class="btn">🚿 Limpiar</button>
+            <button id="revive-btn" class="btn hidden">💖 Revivir</button>
+        </div>
+        
+        <div class="init-form hidden" id="init-form">
+            <h2>Crea tu Tamagotchi</h2>
+            <input type="text" id="pet-name-input" placeholder="Nombre de tu mascota">
+            <button id="create-btn" class="btn">Crear</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
