@@ -129,6 +129,15 @@ class Tamagotchi {
         return false;
     }
     
+    tap() {
+        if (this.tapsToday < 5) {
+            this.money += 2;
+            this.tapsToday++;
+            return true;
+        }
+        return false;
+    }
+    
     buyItem(item) {
         if (this.money >= item.cost) {
             this.money -= item.cost;
@@ -159,8 +168,8 @@ class Tamagotchi {
         return 0;
     }
     
-    work(clickPower = 1) {
-        const earnings = clickPower * 2;
+    work() {
+        const earnings = 2;
         this.money += earnings;
         return earnings;
     }
@@ -215,6 +224,7 @@ let pet = null;
 let tg = null;
 let workInterval = null;
 let workEarnings = 0;
+let workProgress = 0;
 
 async function savePetData() {
     const data = JSON.stringify(pet);
@@ -323,13 +333,20 @@ function showMessage(text) {
 }
 
 function updateRecoveryTime() {
-    if (pet.isSleeping) {
+    if (pet?.isSleeping) {
         const minutes = pet.calculateRecoveryTime();
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         document.getElementById('recovery-time').textContent = `${hours}h ${mins}m`;
-    } else {
+    } else if (pet) {
         document.getElementById('recovery-time').textContent = "No está durmiendo";
+    }
+}
+
+function updateTapInfo() {
+    if (pet) {
+        document.getElementById('tap-value').textContent = '2';
+        document.getElementById('taps-left').textContent = (5 - pet.tapsToday).toString();
     }
 }
 
@@ -356,6 +373,7 @@ async function renderPet() {
     document.getElementById('inventory-count').textContent = pet.inventory.length;
     
     updateRecoveryTime();
+    updateTapInfo();
     
     const petElement = document.getElementById('pet');
     petElement.className = 'pet';
@@ -379,29 +397,31 @@ async function renderPet() {
 function startWork() {
     document.getElementById('work-minigame').classList.remove('hidden');
     workEarnings = 0;
-    let workProgress = 0;
+    workProgress = 0;
+    document.getElementById('work-earned').textContent = '0';
+    document.getElementById('work-bar').style.width = '0%';
     
-    const updateWorkBar = () => {
-        workProgress = Math.min(100, workProgress + 5);
+    // Configurar evento de clic
+    document.getElementById('work-click-area').onclick = () => {
+        workEarnings += pet.work();
+        document.getElementById('work-earned').textContent = workEarnings;
+        
+        workProgress = Math.min(100, workProgress + 15);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
         
         if (workProgress >= 100) {
-            workEarnings += 10;
+            workEarnings += 5; // Bonus por completar
             document.getElementById('work-earned').textContent = workEarnings;
             workProgress = 0;
+            document.getElementById('work-bar').style.width = '0%';
         }
     };
     
-    document.getElementById('work-bar').onclick = () => {
-        workEarnings += pet.work();
-        document.getElementById('work-earned').textContent = workEarnings;
-        updateWorkBar();
-    };
-    
+    // Configurar pérdida progresiva
     workInterval = setInterval(() => {
         workProgress = Math.max(0, workProgress - 1);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
-    }, 500);
+    }, 200);
 }
 
 function stopWork() {
@@ -486,11 +506,14 @@ async function initApp() {
         const petElement = document.getElementById('pet');
         petElement.classList.add('shake');
         
-        if (pet.isAlive && pet.tapsToday < 5) {
-            pet.money += 2;
-            pet.tapsToday++;
-            showMessage("+$2 por jugar con tu mascota!");
-            await renderPet();
+        if (pet.isAlive) {
+            const earned = pet.tap();
+            if (earned) {
+                showMessage("+$2 por jugar con tu mascota!");
+                await renderPet();
+            } else {
+                showMessage("Límite diario alcanzado (5 toques/día)");
+            }
         }
         
         setTimeout(() => {
@@ -527,7 +550,7 @@ async function initApp() {
     
     // Actualizar tiempo de recuperación
     setInterval(() => {
-        if (pet) updateRecoveryTime();
+        updateRecoveryTime();
     }, 60000);
 }
 
