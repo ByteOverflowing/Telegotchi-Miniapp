@@ -728,15 +728,16 @@
         
         // Inicializar el juego
         function initGame() {
-            loadGame();
-            
-            // Mostrar modal de nombre solo si es la primera vez o no tiene nombre personalizado
-            if (!gameState.customName) {
-                showNameModal();
-            } else {
-                setupGame();
-            }
-        }
+    loadGame();
+    setupNameModalListeners(); // Añadir esta línea
+    
+    // Mostrar modal de nombre solo si es la primera vez o no tiene nombre personalizado
+    if (!gameState.customName) {
+        showNameModal();
+    } else {
+        setupGame();
+    }
+}
         
         // Configurar el juego después de establecer el nombre
         function setupGame() {
@@ -752,6 +753,7 @@
         // Mostrar modal para elegir nombre
         function showNameModal() {
             nameModal.style.display = 'flex';
+            petNameInput.focus();
         }
         
         // Cerrar modal de nombre
@@ -865,18 +867,20 @@
         
         // Establecer nombre de la mascota
         function setPetName() {
-            const name = petNameInput.value.trim();
-            if (name) {
-                gameState.petName = name;
-                gameState.customName = true;
-                petName.textContent = name;
-                closeNameModal();
-                setupGame();
-                saveGame();
-            } else {
-                showNotification('Por favor ingresa un nombre válido', 'error');
-            }
-        }
+    const name = petNameInput.value.trim();
+    if (name.length > 0) {
+        gameState.petName = name;
+        gameState.customName = true;
+        petName.textContent = name;
+        closeNameModal();
+        setupGame();
+        saveGame();
+        showNotification(`¡Bienvenido ${name}!`, 'warning');
+    } else {
+        showNotification('Por favor ingresa un nombre válido', 'error');
+        petNameInput.focus();
+    }
+}
         
         // Bucle principal del juego
         function startGameLoop() {
@@ -1461,7 +1465,16 @@
             if (state.cleanliness <= 30) state.neglectTimer.cleanliness = Math.min(maxNeglect, state.neglectTimer.cleanliness + hoursElapsed);
             else state.neglectTimer.cleanliness = Math.max(0, state.neglectTimer.cleanliness - hoursElapsed * 2);
         }
-        
+        function setupNameModalListeners() {
+    confirmNameButton.addEventListener('click', setPetName);
+    
+    // Permitir confirmar con Enter
+    petNameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            setPetName();
+        }
+    });
+}
         // Iniciar el juego cuando se cargue la página
         window.addEventListener('load', initGame);
     </script>
