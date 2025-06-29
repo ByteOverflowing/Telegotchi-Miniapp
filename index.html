@@ -4,110 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="telegram-web-app-cloud-storage" content="true">
-    <title>Tamagotchi Pro</title>
+    <title>Telegotchi</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="currency">💰 $<span id="money">100</span></div>
-            <h1 id="pet-name">Tamagotchi</h1>
-            <div id="pet-state" class="state happy">😊 Feliz</div>
+    <div id="app">
+        <h1>Telegotchi</h1>
+        <div id="pet-stage">
+            <img id="pet" src="egg.png" alt="Telegotchi">
+            <p id="status">Eclosionando...</p>
         </div>
-        
-        <div class="pet-container" id="pet-container">
-            <div id="pet" class="pet egg"></div>
-            <div class="tap-indicator">Toca para ganar $<span id="tap-value">2</span> (<span id="taps-left">5</span>/5 hoy)</div>
+
+        <div id="controls" style="display:none;">
+            <button onclick="feed()">🍖 Alimentar</button>
+            <button onclick="play()">🎮 Jugar</button>
+            <button onclick="sleep()">😴 Dormir</button>
+            <button onclick="clean()">🧼 Limpiar</button>
         </div>
-        
-        <div class="energy-time">⏳ Recuperación completa: <span id="recovery-time">0h 0m</span></div>
-        
-        <div class="stats">
-            <div class="stat">
-                <span>🍔 Hambre:</span>
-                <div class="bar-container">
-                    <div id="hunger-bar" class="bar"></div>
-                    <span id="hunger-value">50%</span>
-                </div>
-            </div>
-            <div class="stat">
-                <span>😊 Felicidad:</span>
-                <div class="bar-container">
-                    <div id="happiness-bar" class="bar"></div>
-                    <span id="happiness-value">70%</span>
-                </div>
-            </div>
-            <div class="stat">
-                <span>⚡ Energía:</span>
-                <div class="bar-container">
-                    <div id="energy-bar" class="bar"></div>
-                    <span id="energy-value">80%</span>
-                </div>
-            </div>
-            <div class="stat">
-                <span>🧼 Limpieza:</span>
-                <div class="bar-container">
-                    <div id="cleanliness-bar" class="bar"></div>
-                    <span id="cleanliness-value">90%</span>
-                </div>
-            </div>
+
+        <div id="stats">
+            <p>Hambre: <span id="hunger">5</span></p>
+            <p>Felicidad: <span id="happiness">5</span></p>
+            <p>Energía: <span id="energy">5</span></p>
+            <p>Limpieza: <span id="cleanliness">5</span></p>
+            <p>💰 Dinero: $<span id="money">0</span></p>
         </div>
-        
-        <div class="info">
-            <div>🏷️ Nombre: <span id="info-name">Tammy</span></div>
-            <div>🎂 Edad: <span id="info-age">0</span> días</div>
-            <div>⚖️ Peso: <span id="info-weight">5</span> kg</div>
-            <div>📦 Inventario: <span id="inventory-count">0</span> items</div>
-        </div>
-        
-        <div class="actions">
-            <button id="feed-btn" class="btn">🍔 Alimentar</button>
-            <button id="play-btn" class="btn">⚽ Jugar</button>
-            <button id="sleep-btn" class="btn">🛌 Dormir</button>
-            <button id="clean-btn" class="btn">🚿 Limpiar</button>
-            <button id="shop-btn" class="btn">🛒 Tienda</button>
-            <button id="work-btn" class="btn">💼 Trabajar</button>
-            <button id="revive-btn" class="btn hidden">💖 Revivir</button>
-        </div>
-        
-        <div id="shop" class="shop hidden">
-            <h3>🛒 Tienda</h3>
-            <div class="shop-items">
-                <div class="item" data-cost="10" data-hunger="20" data-type="food">
-                    🍎 Manzana (+20 energía) - $10
-                </div>
-                <div class="item" data-cost="30" data-hunger="50" data-type="food">
-                    🍔 Hamburguesa (+50 energía) - $30
-                </div>
-                <div class="item" data-cost="20" data-energy="30" data-type="food">
-                    ☕ Café (+30 energía) - $20
-                </div>
-                <div class="item" data-cost="50" data-happiness="30" data-type="toy">
-                    🧸 Peluche (+30 felicidad) - $50
-                </div>
-                <div class="item" data-cost="100" data-type="collectible" data-name="trofeo">
-                    🏆 Trofeo (Coleccionable) - $100
-                </div>
-            </div>
-        </div>
-        
-        <div id="work-minigame" class="minigame hidden">
-            <h3>💼 Trabajar</h3>
-            <p>¡Haz clic en la barra verde para ganar dinero!</p>
-            <div class="work-progress" id="work-click-area">
-                <div class="work-bar" id="work-bar"></div>
-            </div>
-            <p>Dinero ganado: $<span id="work-earned">0</span></p>
-            <button id="work-stop" class="btn">Terminar</button>
-        </div>
-        
-        <div class="init-form hidden" id="init-form">
-            <h2>Crea tu Tamagotchi</h2>
-            <input type="text" id="pet-name-input" placeholder="Nombre de tu mascota">
-            <button id="create-btn" class="btn">Crear</button>
+
+        <div id="shop">
+            <h2>Tienda</h2>
+            <button onclick="buyItem('food')">Comprar comida ($5)</button>
+            <button onclick="buyItem('toy')">Comprar juguete ($10)</button>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        let hunger = 5, happiness = 5, energy = 5, cleanliness = 5, money = 0;
+        let stage = 'egg';
+
+        async function loadState() {
+            try {
+                const keys = await Telegram.WebApp.CloudStorage.getKeys();
+                const data = await Telegram.WebApp.CloudStorage.getItems(keys);
+                hunger = parseInt(data.hunger) || 5;
+                happiness = parseInt(data.happiness) || 5;
+                energy = parseInt(data.energy) || 5;
+                cleanliness = parseInt(data.cleanliness) || 5;
+                money = parseInt(data.money) || 0;
+                stage = data.stage || 'egg';
+                updatePetStage();
+                updateStats();
+            } catch (err) {
+                console.warn('No se pudo cargar el estado:', err);
+            }
+        }
+
+        async function saveState() {
+            try {
+                await Telegram.WebApp.CloudStorage.setItems({
+                    hunger: hunger.toString(),
+                    happiness: happiness.toString(),
+                    energy: energy.toString(),
+                    cleanliness: cleanliness.toString(),
+                    money: money.toString(),
+                    stage: stage
+                });
+            } catch (err) {
+                console.warn('No se pudo guardar el estado:', err);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('hunger').innerText = hunger;
+            document.getElementById('happiness').innerText = happiness;
+            document.getElementById('energy').innerText = energy;
+            document.getElementById('cleanliness').innerText = cleanliness;
+            document.getElementById('money').innerText = money;
+            saveState();
+        }
+
+        function updatePetStage() {
+            const petImg = document.getElementById('pet');
+            const statusText = document.getElementById('status');
+            const controls = document.getElementById('controls');
+
+            if (stage === 'baby') {
+                petImg.src = 'pet.png';
+                statusText.innerText = '¡Hola! Soy tu Telegotchi';
+                controls.style.display = 'block';
+            } else {
+                petImg.src = 'egg.png';
+                statusText.innerText = 'Eclosionando...';
+            }
+        }
+
+        function feed() {
+            if (money >= 5) {
+                hunger = Math.min(10, hunger + 2);
+                money -= 5;
+                updateStats();
+            } else alert('¡No tienes suficiente dinero!');
+        }
+
+        function play() {
+            happiness = Math.min(10, happiness + 2);
+            energy = Math.max(0, energy - 1);
+            money += 1;
+            updateStats();
+        }
+
+        function sleep() {
+            energy = 10;
+            happiness = Math.max(0, happiness - 1);
+            updateStats();
+        }
+
+        function clean() {
+            cleanliness = 10;
+            money += 1;
+            updateStats();
+        }
+
+        function buyItem(type) {
+            if (type === 'food' && money >= 5) {
+                money -= 5;
+                hunger = Math.min(10, hunger + 3);
+            } else if (type === 'toy' && money >= 10) {
+                money -= 10;
+                happiness = Math.min(10, happiness + 3);
+            } else {
+                alert('¡No tienes suficiente dinero!');
+                return;
+            }
+            updateStats();
+        }
+
+        function hatch() {
+            setTimeout(() => {
+                stage = 'baby';
+                updatePetStage();
+                updateStats();
+            }, 3000);
+        }
+
+        Telegram.WebApp.ready();
+        loadState().then(() => {
+            if (stage === 'egg') hatch();
+        });
+    </script>
 </body>
 </html>
