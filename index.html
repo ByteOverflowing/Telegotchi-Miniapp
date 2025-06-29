@@ -1,432 +1,566 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="telegram-web-app-cloud-storage" content="true" />
-    <title>Telegotchi</title>
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com/"
-      crossorigin=""
-    />
-    <link
-      rel="stylesheet"
-      as="style"
-      onload="this.rel='stylesheet'"
-      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
-    />
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Tamagotchi</title>
     <style>
-      /* Modal para pedir nombre */
-      #nameModal {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-      }
-      #nameModalContent {
-        background: #1a2b1d;
-        padding: 2rem;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 360px;
-        text-align: center;
-      }
-      #nameModal input {
-        width: 100%;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        border: none;
-        font-size: 1rem;
-        margin-top: 1rem;
-      }
-      #nameModal button {
-        margin-top: 1.2rem;
-        background: #94e0b2;
-        color: #141f18;
-        font-weight: 700;
-        border-radius: 9999px;
-        padding: 0.5rem 1.5rem;
-        border: none;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color 0.3s ease;
-      }
-      #nameModal button:hover {
-        background: #76c28a;
-      }
-
-      /* Header adaptado para móviles */
-      header {
-        @apply flex flex-col items-center justify-center gap-2 border-b border-solid border-b-[#2a4133] px-6 py-4;
-      }
-      @media (min-width: 640px) {
-        header {
-          @apply flex-row justify-between px-10 py-3;
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
         }
-      }
-
-      /* Logo + titulo en columna en móvil, fila en escritorio */
-      .header-content {
-        @apply flex flex-col items-center gap-2;
-      }
-      @media (min-width: 640px) {
-        .header-content {
-          @apply flex-row items-center gap-4;
+        
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px 0;
         }
-      }
+        
+        h1 {
+            color: #2b7de9;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .pet-container {
+            background-color: #e9f5ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .pet-image {
+            font-size: 80px;
+            margin: 10px 0;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-bar {
+            width: 80px;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background-color: #4caf50;
+        }
+        
+        .hunger .stat-fill {
+            background-color: #ff9800;
+        }
+        
+        .happiness .stat-fill {
+            background-color: #e91e63;
+        }
+        
+        .money {
+            font-weight: bold;
+            color: #4caf50;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background-color: #2b7de9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1a5cb8;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .work-button {
+            background-color: #ff9800;
+        }
+        
+        .work-button:hover {
+            background-color: #e68a00;
+        }
+        
+        .shop-button {
+            background-color: #9c27b0;
+        }
+        
+        .shop-button:hover {
+            background-color: #7b1fa2;
+        }
+        
+        .shop {
+            display: none;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .shop-item:last-child {
+            border-bottom: none;
+        }
+        
+        .collection {
+            margin-top: 20px;
+        }
+        
+        .collection-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .collection-item {
+            width: 50px;
+            height: 50px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .collection-item.owned {
+            background-color: #ffeb3b;
+            border: 2px solid #ffc107;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .pet-evolution {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            z-index: 10;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
-  </head>
-  <body
-    class='relative flex size-full min-h-screen flex-col bg-[#141f18] dark group/design-root overflow-x-hidden font-sans'
-    style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
-  >
-    <div class="layout-container flex h-full grow flex-col">
-      <header>
-        <div class="header-content text-white">
-          <div class="size-4">
-            <svg
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-10 h-10"
-            >
-              <path
-                d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z"
-                fill="currentColor"
-              ></path>
-            </svg>
-          </div>
-          <h2
-            class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
-            id="headerTitle"
-          >
-            Telegotchi
-          </h2>
+</head>
+<body>
+    <div class="container">
+        <h1>Telegram Tamagotchi</h1>
+        
+        <div class="pet-container" id="petContainer">
+            <div class="pet-image" id="petImage">🐣</div>
+            <h2 id="petName">Bebé Tamagotchi</h2>
+            <div class="money">💰 $<span id="moneyAmount">50</span></div>
+            
+            <div class="stats">
+                <div class="stat hunger">
+                    <span>Hambre</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="hungerBar" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="stat happiness">
+                    <span>Felicidad</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="happinessBar" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </header>
-
-      <main class="px-40 flex flex-1 justify-center py-5">
-        <div class="layout-content-container flex flex-col max-w-[960px] flex-1 text-white">
-          <h2
-            class="tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5"
-            id="petNameDisplay"
-          >
-            Mi Mascota
-          </h2>
-          <div
-            class="flex w-full grow bg-[#141f18] @container p-4 rounded-xl border border-[#2a4133]"
-          >
-            <div
-              class="w-full gap-1 overflow-hidden bg-[#141f18] @[480px]:gap-2 aspect-[2/3] rounded-xl flex"
-            >
-              <div
-                id="petImage"
-                class="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
-                style='background-image: url("https://i.imgur.com/O8bD2Rl.png");'
-                title="Mascota Telegotchi"
-              ></div>
-            </div>
-          </div>
-
-          <div
-            class="flex flex-wrap gap-4 p-4 justify-center"
-            id="statsContainer"
-          >
-            <div
-              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-            >
-              <p class="text-white text-base font-medium leading-normal">Hambre</p>
-              <p
-                class="text-white tracking-light text-2xl font-bold leading-tight"
-                id="hungerDisplay"
-              >
-                50%
-              </p>
-            </div>
-            <div
-              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-            >
-              <p class="text-white text-base font-medium leading-normal">Sueño</p>
-              <p
-                class="text-white tracking-light text-2xl font-bold leading-tight"
-                id="sleepDisplay"
-              >
-                50%
-              </p>
-            </div>
-            <div
-              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-            >
-              <p class="text-white text-base font-medium leading-normal">Felicidad</p>
-              <p
-                class="text-white tracking-light text-2xl font-bold leading-tight"
-                id="happinessDisplay"
-              >
-                50%
-              </p>
-            </div>
-            <div
-              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-            >
-              <p class="text-white text-base font-medium leading-normal">Energía</p>
-              <p
-                class="text-white tracking-light text-2xl font-bold leading-tight"
-                id="energyDisplay"
-              >
-                50%
-              </p>
-            </div>
-            <div
-              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-            >
-              <p class="text-white text-base font-medium leading-normal">Limpieza</p>
-              <p
-                class="text-white tracking-light text-2xl font-bold leading-tight"
-                id="cleanlinessDisplay"
-              >
-                50%
-              </p>
-            </div>
-          </div>
-
-          <div class="flex justify-center gap-4 flex-wrap px-4 py-3">
-            <button
-              id="btnSleep"
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-            >
-              Dormir
-            </button>
-            <button
-              id="btnFeed"
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-            >
-              Alimentar
-            </button>
-            <button
-              id="btnPlay"
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-            >
-              Jugar
-            </button>
-            <button
-              id="btnClean"
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-            >
-              Limpiar
-            </button>
-          </div>
-
-          <h3
-            class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4"
-          >
-            Tienda
-          </h3>
-          <div
-            class="flex flex-wrap gap-3 px-4 justify-center"
-            id="shopContainer"
-          >
-            <!-- Los botones se crearán dinámicamente -->
-          </div>
-          <div class="text-white px-4 pt-4 pb-8 text-center text-xl font-bold">
-            Dinero: $<span id="moneyDisplay">0</span>
-          </div>
+        
+        <div class="buttons">
+            <button id="feedButton">Alimentar ($10)</button>
+            <button id="playButton">Jugar</button>
+            <button class="work-button" id="workButton">Trabajar (+$15)</button>
+            <button class="shop-button" id="shopButton">Tienda</button>
         </div>
-      </main>
+        
+        <div class="shop" id="shop">
+            <h3>Tienda</h3>
+            
+            <h4>Comida</h4>
+            <div class="shop-item">
+                <span>🥕 Vegetales ($10)</span>
+                <button class="buy-food" data-cost="10" data-hunger="20">Comprar</button>
+            </div>
+            <div class="shop-item">
+                <span>🍎 Frutas ($20)</span>
+                <button class="buy-food" data-cost="20" data-hunger="40">Comprar</button>
+            </div>
+            <div class="shop-item">
+                <span>🍗 Pollo ($30)</span>
+                <button class="buy-food" data-cost="30" data-hunger="60">Comprar</button>
+            </div>
+            
+            <h4>Coleccionables</h4>
+            <div class="shop-item">
+                <span>🏆 Trofeo ($500)</span>
+                <button class="buy-collectible" data-cost="500" data-id="1">Comprar</button>
+            </div>
+            <div class="shop-item">
+                <span>💎 Diamante ($1000)</span>
+                <button class="buy-collectible" data-cost="1000" data-id="2">Comprar</button>
+            </div>
+            <div class="shop-item">
+                <span>👑 Corona ($2000)</span>
+                <button class="buy-collectible" data-cost="2000" data-id="3">Comprar</button>
+            </div>
+        </div>
+        
+        <div class="collection">
+            <h3>Tu Colección</h3>
+            <div class="collection-items" id="collectionItems">
+                <!-- Los coleccionables aparecerán aquí -->
+            </div>
+        </div>
     </div>
-
-    <!-- Modal pedir nombre -->
-    <div id="nameModal" style="display:none;">
-      <div id="nameModalContent">
-        <h2 class="text-white text-xl font-bold">¡Dale un nombre a tu mascota!</h2>
-        <input type="text" id="petNameInput" placeholder="Nombre de la mascota" maxlength="20" />
-        <button id="saveNameBtn">Guardar</button>
-      </div>
-    </div>
-
+    
+    <div class="notification" id="notification"></div>
+    
     <script>
-      Telegram.WebApp.ready();
-
-      // Estadísticas de la mascota (0-100)
-      let hunger = 50;
-      let sleep = 50;
-      let happiness = 50;
-      let energy = 50;
-      let cleanliness = 50;
-      let money = 0;
-      let petName = "Mi Mascota";
-
-      // Items en tienda
-      const shopItems = [
-        { id: "foodBasic", name: "Comida básica", price: 5, effect: () => { hunger = Math.min(100, hunger + 20); } },
-        { id: "foodEnergy", name: "Snack energético", price: 8, effect: () => { energy = Math.min(100, energy + 15); } },
-        { id: "toySimple", name: "Juguete simple", price: 10, effect: () => { happiness = Math.min(100, happiness + 20); } },
-        { id: "toyPremium", name: "Juguete premium", price: 25, effect: () => { happiness = Math.min(100, happiness + 40); } },
-        { id: "cleaner", name: "Kit limpieza", price: 15, effect: () => { cleanliness = Math.min(100, cleanliness + 30); } },
-        { id: "rareFigurine", name: "Figura coleccionable", price: 100, effect: () => { alert("¡Has comprado una figura coleccionable rara!"); } },
-        { id: "goldenEgg", name: "Huevo dorado", price: 200, effect: () => { money += 50; alert("¡Encontraste dinero extra!"); } },
-      ];
-
-      function saveState() {
-        Telegram.WebApp.CloudStorage.setItems({
-          hunger: hunger.toString(),
-          sleep: sleep.toString(),
-          happiness: happiness.toString(),
-          energy: energy.toString(),
-          cleanliness: cleanliness.toString(),
-          money: money.toString(),
-          petName,
-        });
-      }
-
-      async function loadState() {
-        try {
-          const keys = await Telegram.WebApp.CloudStorage.getKeys();
-          const data = await Telegram.WebApp.CloudStorage.getItems(keys);
-          hunger = parseInt(data.hunger) || 50;
-          sleep = parseInt(data.sleep) || 50;
-          happiness = parseInt(data.happiness) || 50;
-          energy = parseInt(data.energy) || 50;
-          cleanliness = parseInt(data.cleanliness) || 50;
-          money = parseInt(data.money) || 0;
-          petName = data.petName || "Mi Mascota";
-          updateUI();
-          checkName();
-        } catch (e) {
-          console.warn("No se pudo cargar el estado", e);
-          checkName();
-          updateUI();
+        // Estado del juego
+        const gameState = {
+            money: 50,
+            hunger: 100,
+            happiness: 100,
+            level: 1,
+            xp: 0,
+            collectedItems: [],
+            petStage: 'baby',
+            petName: 'Bebé Tamagotchi',
+            workCooldown: false
+        };
+        
+        // Elementos del DOM
+        const petImage = document.getElementById('petImage');
+        const petName = document.getElementById('petName');
+        const moneyAmount = document.getElementById('moneyAmount');
+        const hungerBar = document.getElementById('hungerBar');
+        const happinessBar = document.getElementById('happinessBar');
+        const feedButton = document.getElementById('feedButton');
+        const playButton = document.getElementById('playButton');
+        const workButton = document.getElementById('workButton');
+        const shopButton = document.getElementById('shopButton');
+        const shop = document.getElementById('shop');
+        const collectionItems = document.getElementById('collectionItems');
+        const notification = document.getElementById('notification');
+        const petContainer = document.getElementById('petContainer');
+        
+        // Configuración de etapas de la mascota
+        const petStages = {
+            baby: { emoji: '🐣', name: 'Bebé Tamagotchi', nextXp: 50 },
+            child: { emoji: '🐥', name: 'Tamagotchi Niño', nextXp: 150 },
+            teen: { emoji: '🐤', name: 'Tamagotchi Adolescente', nextXp: 300 },
+            adult: { emoji: '🐔', name: 'Tamagotchi Adulto', nextXp: null }
+        };
+        
+        // Coleccionables disponibles
+        const collectibles = [
+            { id: 1, emoji: '🏆', name: 'Trofeo', price: 500 },
+            { id: 2, emoji: '💎', name: 'Diamante', price: 1000 },
+            { id: 3, emoji: '👑', name: 'Corona', price: 2000 }
+        ];
+        
+        // Inicializar el juego
+        function initGame() {
+            updateUI();
+            startGameLoop();
+            
+            // Event listeners
+            feedButton.addEventListener('click', feedPet);
+            playButton.addEventListener('click', playWithPet);
+            workButton.addEventListener('click', work);
+            shopButton.addEventListener('click', toggleShop);
+            
+            // Delegación de eventos para los botones de compra
+            shop.addEventListener('click', function(e) {
+                if (e.target.classList.contains('buy-food')) {
+                    const cost = parseInt(e.target.getAttribute('data-cost'));
+                    const hunger = parseInt(e.target.getAttribute('data-hunger'));
+                    buyFood(cost, hunger);
+                }
+                
+                if (e.target.classList.contains('buy-collectible')) {
+                    const cost = parseInt(e.target.getAttribute('data-cost'));
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    buyCollectible(cost, id);
+                }
+            });
         }
-      }
-
-      function updateUI() {
-        document.getElementById("hungerDisplay").innerText = hunger + "%";
-        document.getElementById("sleepDisplay").innerText = sleep + "%";
-        document.getElementById("happinessDisplay").innerText = happiness + "%";
-        document.getElementById("energyDisplay").innerText = energy + "%";
-        document.getElementById("cleanlinessDisplay").innerText = cleanliness + "%";
-        document.getElementById("moneyDisplay").innerText = money;
-        document.getElementById("petNameDisplay").innerText = petName;
-      }
-
-      function updateShop() {
-        const shopContainer = document.getElementById("shopContainer");
-        shopContainer.innerHTML = "";
-        shopItems.forEach((item) => {
-          const btn = document.createElement("button");
-          btn.className =
-            "flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]";
-          btn.innerText = `${item.name} ($${item.price})`;
-          btn.onclick = () => buyItem(item.id);
-          shopContainer.appendChild(btn);
-        });
-      }
-
-      function buyItem(id) {
-        const item = shopItems.find((i) => i.id === id);
-        if (!item) return;
-        if (money < item.price) {
-          alert("¡No tienes suficiente dinero!");
-          return;
+        
+        // Bucle principal del juego
+        function startGameLoop() {
+            setInterval(() => {
+                // Disminuir estadísticas con el tiempo
+                gameState.hunger = Math.max(0, gameState.hunger - 2);
+                gameState.happiness = Math.max(0, gameState.happiness - 1);
+                
+                // Añadir un poco de XP por sobrevivir
+                if (gameState.hunger > 0 && gameState.happiness > 0) {
+                    gameState.xp += 1;
+                }
+                
+                // Verificar evolución
+                checkEvolution();
+                
+                // Verificar si la mascota murió
+                if (gameState.hunger <= 0 || gameState.happiness <= 0) {
+                    petImage.textContent = '💀';
+                    petName.textContent = 'RIP Tamagotchi';
+                    showNotification('¡Tu Tamagotchi ha muerto! Recarga la página para empezar de nuevo.');
+                    return;
+                }
+                
+                updateUI();
+            }, 3000);
         }
-        money -= item.price;
-        item.effect();
-        saveState();
-        updateUI();
-      }
-
-      // Funciones de acciones
-      function feed() {
-        if (money < 5) {
-          alert("¡No tienes suficiente dinero para alimentar!");
-          return;
+        
+        // Actualizar la interfaz de usuario
+        function updateUI() {
+            moneyAmount.textContent = gameState.money;
+            hungerBar.style.width = `${gameState.hunger}%`;
+            happinessBar.style.width = `${gameState.happiness}%`;
+            
+            // Actualizar colores de las barras según los valores
+            hungerBar.style.backgroundColor = gameState.hunger < 30 ? '#f44336' : gameState.hunger < 70 ? '#ff9800' : '#4caf50';
+            happinessBar.style.backgroundColor = gameState.happiness < 30 ? '#f44336' : gameState.happiness < 70 ? '#e91e63' : '#4caf50';
+            
+            // Deshabilitar botones si no hay dinero suficiente
+            feedButton.disabled = gameState.money < 10;
+            
+            // Actualizar colección
+            updateCollectionDisplay();
         }
-        hunger = Math.min(100, hunger + 15);
-        money -= 5;
-        saveState();
-        updateUI();
-      }
-
-      function play() {
-        if (energy < 10) {
-          alert("¡Tu mascota está muy cansada para jugar!");
-          return;
+        
+        // Alimentar a la mascota
+        function feedPet() {
+            if (gameState.money >= 10) {
+                gameState.money -= 10;
+                gameState.hunger = Math.min(100, gameState.hunger + 20);
+                gameState.xp += 5;
+                showNotification('¡Tu Tamagotchi ha comido! +20 de hambre');
+                updateUI();
+            }
         }
-        happiness = Math.min(100, happiness + 15);
-        energy = Math.max(0, energy - 10);
-        money += 2;
-        saveState();
-        updateUI();
-      }
-
-      function sleepFunc() {
-        sleep = 100;
-        energy = Math.min(100, energy + 30);
-        happiness = Math.max(0, happiness - 5);
-        saveState();
-        updateUI();
-      }
-
-      function clean() {
-        cleanliness = 100;
-        money += 1;
-        saveState();
-        updateUI();
-      }
-
-      // Disminución automática de stats cada cierto tiempo
-      function autoDecrease() {
-        hunger = Math.max(0, hunger - 1);
-        sleep = Math.max(0, sleep - 1);
-        happiness = Math.max(0, happiness - 1);
-        energy = Math.max(0, energy - 1);
-        cleanliness = Math.max(0, cleanliness - 1);
-        saveState();
-        updateUI();
-      }
-
-      // Modal nombre mascota
-      const nameModal = document.getElementById("nameModal");
-      const petNameInput = document.getElementById("petNameInput");
-      const saveNameBtn = document.getElementById("saveNameBtn");
-
-      function checkName() {
-        if (!petName || petName === "Mi Mascota") {
-          nameModal.style.display = "flex";
+        
+        // Jugar con la mascota
+        function playWithPet() {
+            gameState.happiness = Math.min(100, gameState.happiness + 15);
+            gameState.xp += 10;
+            showNotification('¡Tu Tamagotchi se divirtió jugando! +15 de felicidad');
+            updateUI();
         }
-      }
-
-      saveNameBtn.onclick = () => {
-        const name = petNameInput.value.trim();
-        if (name.length < 1) {
-          alert("Por favor, escribe un nombre válido.");
-          return;
+        
+        // Trabajar para ganar dinero
+        function work() {
+            if (!gameState.workCooldown) {
+                gameState.money += 15;
+                gameState.happiness = Math.max(0, gameState.happiness - 5);
+                gameState.workCooldown = true;
+                
+                showNotification('+$15 por trabajar. -5 de felicidad');
+                updateUI();
+                
+                // Cooldown de trabajo
+                setTimeout(() => {
+                    gameState.workCooldown = false;
+                    workButton.textContent = 'Trabajar (+$15)';
+                }, 5000);
+                
+                workButton.textContent = 'Descansando...';
+            }
         }
-        petName = name;
-        nameModal.style.display = "none";
-        updateUI();
-        saveState();
-      };
-
-      // Botones de acciones
-      document.getElementById("btnFeed").onclick = feed;
-      document.getElementById("btnPlay").onclick = play;
-      document.getElementById("btnSleep").onclick = sleepFunc;
-      document.getElementById("btnClean").onclick = clean;
-
-      // Inicialización
-      loadState();
-      updateShop();
-
-      // Disminuye stats cada 30 segundos (ajusta si quieres)
-      setInterval(autoDecrease, 30000);
+        
+        // Comprar comida
+        function buyFood(cost, hungerValue) {
+            if (gameState.money >= cost) {
+                gameState.money -= cost;
+                gameState.hunger = Math.min(100, gameState.hunger + hungerValue);
+                gameState.xp += 10;
+                showNotification(`¡Comida comprada! +${hungerValue} de hambre`);
+                updateUI();
+            } else {
+                showNotification('No tienes suficiente dinero', 'error');
+            }
+        }
+        
+        // Comprar coleccionable
+        function buyCollectible(cost, id) {
+            if (gameState.money >= cost) {
+                if (!gameState.collectedItems.includes(id)) {
+                    gameState.money -= cost;
+                    gameState.collectedItems.push(id);
+                    gameState.xp += 50;
+                    showNotification('¡Coleccionable adquirido! +50 XP');
+                    updateUI();
+                } else {
+                    showNotification('Ya tienes este coleccionable', 'error');
+                }
+            } else {
+                showNotification('No tienes suficiente dinero', 'error');
+            }
+        }
+        
+        // Mostrar/ocultar tienda
+        function toggleShop() {
+            shop.style.display = shop.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Verificar evolución de la mascota
+        function checkEvolution() {
+            if (gameState.petStage === 'adult') return;
+            
+            const currentStage = petStages[gameState.petStage];
+            
+            if (gameState.xp >= currentStage.nextXp) {
+                // Evolucionar a la siguiente etapa
+                let nextStage;
+                
+                if (gameState.petStage === 'baby') nextStage = 'child';
+                else if (gameState.petStage === 'child') nextStage = 'teen';
+                else if (gameState.petStage === 'teen') nextStage = 'adult';
+                
+                if (nextStage) {
+                    gameState.petStage = nextStage;
+                    gameState.petName = petStages[nextStage].name;
+                    
+                    // Mostrar animación de evolución
+                    showEvolutionAnimation(petStages[nextStage].emoji);
+                    
+                    showNotification(`¡Tu Tamagotchi ha evolucionado a ${petStages[nextStage].name}!`);
+                }
+            }
+        }
+        
+        // Mostrar animación de evolución
+        function showEvolutionAnimation(newEmoji) {
+            const evolutionDiv = document.createElement('div');
+            evolutionDiv.className = 'pet-evolution';
+            evolutionDiv.innerHTML = `
+                <div class="pet-image">${newEmoji}</div>
+                <h2>¡Evolucionando!</h2>
+                <p>${gameState.petName}</p>
+            `;
+            
+            petContainer.appendChild(evolutionDiv);
+            
+            // Eliminar la animación después de 3 segundos
+            setTimeout(() => {
+                petContainer.removeChild(evolutionDiv);
+                petImage.textContent = newEmoji;
+                petName.textContent = gameState.petName;
+            }, 3000);
+        }
+        
+        // Actualizar visualización de la colección
+        function updateCollectionDisplay() {
+            collectionItems.innerHTML = '';
+            
+            collectibles.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `collection-item ${gameState.collectedItems.includes(item.id) ? 'owned' : ''}`;
+                itemDiv.textContent = item.emoji;
+                itemDiv.title = gameState.collectedItems.includes(item.id) ? item.name : '???';
+                collectionItems.appendChild(itemDiv);
+            });
+        }
+        
+        // Mostrar notificación
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (type === 'error') {
+                notification.style.backgroundColor = '#f44336';
+            } else if (type === 'success') {
+                notification.style.backgroundColor = '#4caf50';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Iniciar el juego cuando se cargue la página
+        window.addEventListener('load', initGame);
     </script>
-  </body>
+</body>
 </html>
