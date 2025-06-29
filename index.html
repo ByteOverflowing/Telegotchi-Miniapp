@@ -48,8 +48,9 @@
         }
         
         .stats {
-            display: flex;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin: 15px 0;
         }
         
@@ -60,7 +61,7 @@
         }
         
         .stat-bar {
-            width: 80px;
+            width: 100%;
             height: 10px;
             background-color: #e0e0e0;
             border-radius: 5px;
@@ -79,6 +80,14 @@
         
         .happiness .stat-fill {
             background-color: #e91e63;
+        }
+        
+        .energy .stat-fill {
+            background-color: #2196f3;
+        }
+        
+        .cleanliness .stat-fill {
+            background-color: #9c27b0;
         }
         
         .money {
@@ -131,6 +140,22 @@
             background-color: #7b1fa2;
         }
         
+        .sleep-button {
+            background-color: #673ab7;
+        }
+        
+        .sleep-button:hover {
+            background-color: #5e35b1;
+        }
+        
+        .clean-button {
+            background-color: #009688;
+        }
+        
+        .clean-button:hover {
+            background-color: #00897b;
+        }
+        
         .shop {
             display: none;
             background-color: #f9f9f9;
@@ -171,11 +196,27 @@
             align-items: center;
             justify-content: center;
             font-size: 24px;
+            position: relative;
         }
         
         .collection-item.owned {
             background-color: #ffeb3b;
             border: 2px solid #ffc107;
+        }
+        
+        .collection-count {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .notification {
@@ -197,6 +238,10 @@
             opacity: 1;
         }
         
+        .notification.error {
+            background-color: #f44336;
+        }
+        
         .pet-evolution {
             position: absolute;
             top: 0;
@@ -216,6 +261,31 @@
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid #2b7de9;
+            font-weight: bold;
+        }
+        
+        .shop-content {
+            display: none;
+        }
+        
+        .shop-content.active {
+            display: block;
         }
     </style>
 </head>
@@ -241,6 +311,18 @@
                         <div class="stat-fill" id="happinessBar" style="width: 100%;"></div>
                     </div>
                 </div>
+                <div class="stat energy">
+                    <span>Energía</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="energyBar" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="stat cleanliness">
+                    <span>Limpieza</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill" id="cleanlinessBar" style="width: 100%;"></div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -248,38 +330,97 @@
             <button id="feedButton">Alimentar ($10)</button>
             <button id="playButton">Jugar</button>
             <button class="work-button" id="workButton">Trabajar (+$15)</button>
+            <button class="sleep-button" id="sleepButton">Dormir</button>
+            <button class="clean-button" id="cleanButton">Limpiar ($5)</button>
             <button class="shop-button" id="shopButton">Tienda</button>
         </div>
         
         <div class="shop" id="shop">
-            <h3>Tienda</h3>
-            
-            <h4>Comida</h4>
-            <div class="shop-item">
-                <span>🥕 Vegetales ($10)</span>
-                <button class="buy-food" data-cost="10" data-hunger="20">Comprar</button>
-            </div>
-            <div class="shop-item">
-                <span>🍎 Frutas ($20)</span>
-                <button class="buy-food" data-cost="20" data-hunger="40">Comprar</button>
-            </div>
-            <div class="shop-item">
-                <span>🍗 Pollo ($30)</span>
-                <button class="buy-food" data-cost="30" data-hunger="60">Comprar</button>
+            <div class="tabs">
+                <div class="tab active" data-tab="food">Comida</div>
+                <div class="tab" data-tab="energy">Energía</div>
+                <div class="tab" data-tab="cleanliness">Limpieza</div>
+                <div class="tab" data-tab="collectibles">Coleccionables</div>
             </div>
             
-            <h4>Coleccionables</h4>
-            <div class="shop-item">
-                <span>🏆 Trofeo ($500)</span>
-                <button class="buy-collectible" data-cost="500" data-id="1">Comprar</button>
+            <div class="shop-content active" id="food-shop">
+                <div class="shop-item">
+                    <span>🥕 Vegetales ($10)</span>
+                    <button class="buy-item" data-type="food" data-cost="10" data-value="20">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🍎 Frutas ($20)</span>
+                    <button class="buy-item" data-type="food" data-cost="20" data-value="40">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🍗 Pollo ($30)</span>
+                    <button class="buy-item" data-type="food" data-cost="30" data-value="60">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🍔 Comida rápida ($15)</span>
+                    <button class="buy-item" data-type="food" data-cost="15" data-value="30" data-cleanliness="-10">Comprar</button>
+                </div>
             </div>
-            <div class="shop-item">
-                <span>💎 Diamante ($1000)</span>
-                <button class="buy-collectible" data-cost="1000" data-id="2">Comprar</button>
+            
+            <div class="shop-content" id="energy-shop">
+                <div class="shop-item">
+                    <span>☕ Café ($20)</span>
+                    <button class="buy-item" data-type="energy" data-cost="20" data-value="30">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🍵 Té ($15)</span>
+                    <button class="buy-item" data-type="energy" data-cost="15" data-value="20">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>⚡ Bebida energética ($40)</span>
+                    <button class="buy-item" data-type="energy" data-cost="40" data-value="60" data-happiness="10">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>💊 Vitaminas ($50)</span>
+                    <button class="buy-item" data-type="energy" data-cost="50" data-value="40" data-hunger="10">Comprar</button>
+                </div>
             </div>
-            <div class="shop-item">
-                <span>👑 Corona ($2000)</span>
-                <button class="buy-collectible" data-cost="2000" data-id="3">Comprar</button>
+            
+            <div class="shop-content" id="cleanliness-shop">
+                <div class="shop-item">
+                    <span>🧼 Jabón ($10)</span>
+                    <button class="buy-item" data-type="cleanliness" data-cost="10" data-value="30">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🚿 Champú ($20)</span>
+                    <button class="buy-item" data-type="cleanliness" data-cost="20" data-value="50">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🧴 Loción ($30)</span>
+                    <button class="buy-item" data-type="cleanliness" data-cost="30" data-value="70" data-happiness="10">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🧽 Spa de lujo ($100)</span>
+                    <button class="buy-item" data-type="cleanliness" data-cost="100" data-value="100" data-happiness="20">Comprar</button>
+                </div>
+            </div>
+            
+            <div class="shop-content" id="collectibles-shop">
+                <div class="shop-item">
+                    <span>🏆 Trofeo ($500)</span>
+                    <button class="buy-item" data-type="collectible" data-cost="500" data-id="1">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>💎 Diamante ($1000)</span>
+                    <button class="buy-item" data-type="collectible" data-cost="1000" data-id="2">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>👑 Corona ($2000)</span>
+                    <button class="buy-item" data-type="collectible" data-cost="2000" data-id="3">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🎮 Consola ($1500)</span>
+                    <button class="buy-item" data-type="collectible" data-cost="1500" data-id="4">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <span>🏡 Casa ($5000)</span>
+                    <button class="buy-item" data-type="collectible" data-cost="5000" data-id="5">Comprar</button>
+                </div>
             </div>
         </div>
         
@@ -295,17 +436,23 @@
     
     <script>
         // Estado del juego
-        const gameState = {
+        const defaultGameState = {
             money: 50,
             hunger: 100,
             happiness: 100,
+            energy: 100,
+            cleanliness: 100,
             level: 1,
             xp: 0,
-            collectedItems: [],
+            collectedItems: {},
             petStage: 'baby',
             petName: 'Bebé Tamagotchi',
-            workCooldown: false
+            workCooldown: false,
+            sleepCooldown: false,
+            lastUpdate: Date.now()
         };
+        
+        let gameState = {...defaultGameState};
         
         // Elementos del DOM
         const petImage = document.getElementById('petImage');
@@ -313,14 +460,20 @@
         const moneyAmount = document.getElementById('moneyAmount');
         const hungerBar = document.getElementById('hungerBar');
         const happinessBar = document.getElementById('happinessBar');
+        const energyBar = document.getElementById('energyBar');
+        const cleanlinessBar = document.getElementById('cleanlinessBar');
         const feedButton = document.getElementById('feedButton');
         const playButton = document.getElementById('playButton');
         const workButton = document.getElementById('workButton');
+        const sleepButton = document.getElementById('sleepButton');
+        const cleanButton = document.getElementById('cleanButton');
         const shopButton = document.getElementById('shopButton');
         const shop = document.getElementById('shop');
         const collectionItems = document.getElementById('collectionItems');
         const notification = document.getElementById('notification');
         const petContainer = document.getElementById('petContainer');
+        const tabs = document.querySelectorAll('.tab');
+        const shopContents = document.querySelectorAll('.shop-content');
         
         // Configuración de etapas de la mascota
         const petStages = {
@@ -334,126 +487,276 @@
         const collectibles = [
             { id: 1, emoji: '🏆', name: 'Trofeo', price: 500 },
             { id: 2, emoji: '💎', name: 'Diamante', price: 1000 },
-            { id: 3, emoji: '👑', name: 'Corona', price: 2000 }
+            { id: 3, emoji: '👑', name: 'Corona', price: 2000 },
+            { id: 4, emoji: '🎮', name: 'Consola', price: 1500 },
+            { id: 5, emoji: '🏡', name: 'Casa', price: 5000 }
         ];
         
         // Inicializar el juego
         function initGame() {
+            loadGame();
             updateUI();
+            setupEventListeners();
             startGameLoop();
-            
-            // Event listeners
+        }
+        
+        // Cargar el juego guardado
+        function loadGame() {
+            const savedGame = localStorage.getItem('tamagotchiGame');
+            if (savedGame) {
+                const parsedGame = JSON.parse(savedGame);
+                
+                // Calcular el tiempo transcurrido desde la última actualización
+                const now = Date.now();
+                const timeElapsed = Math.floor((now - parsedGame.lastUpdate) / 1000); // en segundos
+                
+                // Aplicar degradación basada en el tiempo transcurrido
+                if (timeElapsed > 0) {
+                    const minutesElapsed = Math.floor(timeElapsed / 60);
+                    
+                    // Degradación por minuto transcurrido
+                    parsedGame.hunger = Math.max(0, parsedGame.hunger - minutesElapsed * 2);
+                    parsedGame.happiness = Math.max(0, parsedGame.happiness - minutesElapsed * 1);
+                    parsedGame.energy = Math.max(0, parsedGame.energy - minutesElapsed * 1.5);
+                    parsedGame.cleanliness = Math.max(0, parsedGame.cleanliness - minutesElapsed * 1.2);
+                    
+                    // Añadir XP por tiempo sobrevivido
+                    if (parsedGame.hunger > 0 && parsedGame.happiness > 0) {
+                        parsedGame.xp += minutesElapsed;
+                    }
+                }
+                
+                parsedGame.lastUpdate = now;
+                gameState = parsedGame;
+            }
+        }
+        
+        // Guardar el estado del juego
+        function saveGame() {
+            gameState.lastUpdate = Date.now();
+            localStorage.setItem('tamagotchiGame', JSON.stringify(gameState));
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Botones de acciones
             feedButton.addEventListener('click', feedPet);
             playButton.addEventListener('click', playWithPet);
             workButton.addEventListener('click', work);
+            sleepButton.addEventListener('click', putToSleep);
+            cleanButton.addEventListener('click', cleanPet);
             shopButton.addEventListener('click', toggleShop);
+            
+            // Tabs de la tienda
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabId = tab.getAttribute('data-tab');
+                    shopContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}-shop`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
             
             // Delegación de eventos para los botones de compra
             shop.addEventListener('click', function(e) {
-                if (e.target.classList.contains('buy-food')) {
+                if (e.target.classList.contains('buy-item')) {
+                    const type = e.target.getAttribute('data-type');
                     const cost = parseInt(e.target.getAttribute('data-cost'));
-                    const hunger = parseInt(e.target.getAttribute('data-hunger'));
-                    buyFood(cost, hunger);
-                }
-                
-                if (e.target.classList.contains('buy-collectible')) {
-                    const cost = parseInt(e.target.getAttribute('data-cost'));
-                    const id = parseInt(e.target.getAttribute('data-id'));
-                    buyCollectible(cost, id);
+                    
+                    if (type === 'collectible') {
+                        const id = parseInt(e.target.getAttribute('data-id'));
+                        buyCollectible(cost, id);
+                    } else {
+                        const value = parseInt(e.target.getAttribute('data-value'));
+                        const hunger = e.target.hasAttribute('data-hunger') ? parseInt(e.target.getAttribute('data-hunger')) : 0;
+                        const happiness = e.target.hasAttribute('data-happiness') ? parseInt(e.target.getAttribute('data-happiness')) : 0;
+                        const cleanliness = e.target.hasAttribute('data-cleanliness') ? parseInt(e.target.getAttribute('data-cleanliness')) : 0;
+                        
+                        buyItem(type, cost, value, { hunger, happiness, cleanliness });
+                    }
                 }
             });
+            
+            // Guardar el juego antes de cerrar la página
+            window.addEventListener('beforeunload', saveGame);
         }
         
         // Bucle principal del juego
         function startGameLoop() {
             setInterval(() => {
                 // Disminuir estadísticas con el tiempo
-                gameState.hunger = Math.max(0, gameState.hunger - 2);
-                gameState.happiness = Math.max(0, gameState.happiness - 1);
+                gameState.hunger = Math.max(0, gameState.hunger - 0.5);
+                gameState.happiness = Math.max(0, gameState.happiness - 0.3);
+                gameState.energy = Math.max(0, gameState.energy - 0.4);
+                gameState.cleanliness = Math.max(0, gameState.cleanliness - 0.3);
                 
                 // Añadir un poco de XP por sobrevivir
                 if (gameState.hunger > 0 && gameState.happiness > 0) {
-                    gameState.xp += 1;
+                    gameState.xp += 0.5;
                 }
                 
                 // Verificar evolución
                 checkEvolution();
                 
                 // Verificar si la mascota murió
-                if (gameState.hunger <= 0 || gameState.happiness <= 0) {
-                    petImage.textContent = '💀';
-                    petName.textContent = 'RIP Tamagotchi';
-                    showNotification('¡Tu Tamagotchi ha muerto! Recarga la página para empezar de nuevo.');
-                    return;
-                }
+                checkPetHealth();
                 
                 updateUI();
+                saveGame();
             }, 3000);
         }
         
         // Actualizar la interfaz de usuario
         function updateUI() {
-            moneyAmount.textContent = gameState.money;
-            hungerBar.style.width = `${gameState.hunger}%`;
-            happinessBar.style.width = `${gameState.happiness}%`;
+            moneyAmount.textContent = Math.floor(gameState.money);
+            hungerBar.style.width = `${Math.floor(gameState.hunger)}%`;
+            happinessBar.style.width = `${Math.floor(gameState.happiness)}%`;
+            energyBar.style.width = `${Math.floor(gameState.energy)}%`;
+            cleanlinessBar.style.width = `${Math.floor(gameState.cleanliness)}%`;
             
             // Actualizar colores de las barras según los valores
-            hungerBar.style.backgroundColor = gameState.hunger < 30 ? '#f44336' : gameState.hunger < 70 ? '#ff9800' : '#4caf50';
-            happinessBar.style.backgroundColor = gameState.happiness < 30 ? '#f44336' : gameState.happiness < 70 ? '#e91e63' : '#4caf50';
+            updateBarColor(hungerBar, gameState.hunger, '#ff9800');
+            updateBarColor(happinessBar, gameState.happiness, '#e91e63');
+            updateBarColor(energyBar, gameState.energy, '#2196f3');
+            updateBarColor(cleanlinessBar, gameState.cleanliness, '#9c27b0');
             
-            // Deshabilitar botones si no hay dinero suficiente
-            feedButton.disabled = gameState.money < 10;
+            // Deshabilitar botones según el estado
+            feedButton.disabled = gameState.money < 10 || gameState.hunger >= 100;
+            cleanButton.disabled = gameState.money < 5 || gameState.cleanliness >= 100;
+            workButton.disabled = gameState.workCooldown || gameState.energy <= 0;
+            playButton.disabled = gameState.energy <= 0;
+            sleepButton.disabled = gameState.sleepCooldown || gameState.energy >= 100;
+            
+            // Actualizar texto de botones
+            workButton.textContent = gameState.workCooldown ? 'Descansando...' : 'Trabajar (+$15)';
+            sleepButton.textContent = gameState.sleepCooldown ? 'Despertando...' : 'Dormir';
             
             // Actualizar colección
             updateCollectionDisplay();
         }
         
+        // Actualizar color de una barra según su valor
+        function updateBarColor(bar, value, midColor) {
+            if (value < 30) {
+                bar.style.backgroundColor = '#f44336';
+            } else if (value < 70) {
+                bar.style.backgroundColor = midColor;
+            } else {
+                bar.style.backgroundColor = '#4caf50';
+            }
+        }
+        
         // Alimentar a la mascota
         function feedPet() {
-            if (gameState.money >= 10) {
+            if (gameState.money >= 10 && gameState.hunger < 100) {
                 gameState.money -= 10;
                 gameState.hunger = Math.min(100, gameState.hunger + 20);
                 gameState.xp += 5;
-                showNotification('¡Tu Tamagotchi ha comido! +20 de hambre');
+                gameState.cleanliness = Math.max(0, gameState.cleanliness - 5);
+                showNotification('¡Tu Tamagotchi ha comido! +20 de hambre, -5 de limpieza');
                 updateUI();
             }
         }
         
         // Jugar con la mascota
         function playWithPet() {
-            gameState.happiness = Math.min(100, gameState.happiness + 15);
-            gameState.xp += 10;
-            showNotification('¡Tu Tamagotchi se divirtió jugando! +15 de felicidad');
-            updateUI();
+            if (gameState.energy > 0) {
+                gameState.happiness = Math.min(100, gameState.happiness + 15);
+                gameState.energy = Math.max(0, gameState.energy - 20);
+                gameState.xp += 10;
+                gameState.cleanliness = Math.max(0, gameState.cleanliness - 10);
+                showNotification('¡Tu Tamagotchi se divirtió jugando! +15 felicidad, -20 energía, -10 limpieza');
+                updateUI();
+            }
         }
         
         // Trabajar para ganar dinero
         function work() {
-            if (!gameState.workCooldown) {
+            if (!gameState.workCooldown && gameState.energy > 0) {
                 gameState.money += 15;
                 gameState.happiness = Math.max(0, gameState.happiness - 5);
+                gameState.energy = Math.max(0, gameState.energy - 30);
                 gameState.workCooldown = true;
                 
-                showNotification('+$15 por trabajar. -5 de felicidad');
+                showNotification('+$15 por trabajar. -5 felicidad, -30 energía');
                 updateUI();
                 
                 // Cooldown de trabajo
                 setTimeout(() => {
                     gameState.workCooldown = false;
-                    workButton.textContent = 'Trabajar (+$15)';
-                }, 5000);
-                
-                workButton.textContent = 'Descansando...';
+                    updateUI();
+                }, 10000);
             }
         }
         
-        // Comprar comida
-        function buyFood(cost, hungerValue) {
+        // Poner a dormir a la mascota
+        function putToSleep() {
+            if (!gameState.sleepCooldown && gameState.energy < 100) {
+                gameState.sleepCooldown = true;
+                sleepButton.textContent = 'Durmiendo...';
+                
+                // Recuperar energía gradualmente
+                const sleepInterval = setInterval(() => {
+                    gameState.energy = Math.min(100, gameState.energy + 10);
+                    updateUI();
+                    
+                    if (gameState.energy >= 100) {
+                        clearInterval(sleepInterval);
+                        gameState.sleepCooldown = false;
+                        showNotification('¡Tu Tamagotchi descansó bien! Energía al máximo');
+                        updateUI();
+                    }
+                }, 2000);
+            }
+        }
+        
+        // Limpiar a la mascota
+        function cleanPet() {
+            if (gameState.money >= 5 && gameState.cleanliness < 100) {
+                gameState.money -= 5;
+                gameState.cleanliness = Math.min(100, gameState.cleanliness + 30);
+                gameState.xp += 3;
+                showNotification('¡Tu Tamagotchi está limpio! +30 limpieza');
+                updateUI();
+            }
+        }
+        
+        // Comprar ítem de la tienda
+        function buyItem(type, cost, value, sideEffects = {}) {
             if (gameState.money >= cost) {
                 gameState.money -= cost;
-                gameState.hunger = Math.min(100, gameState.hunger + hungerValue);
-                gameState.xp += 10;
-                showNotification(`¡Comida comprada! +${hungerValue} de hambre`);
+                
+                switch (type) {
+                    case 'food':
+                        gameState.hunger = Math.min(100, gameState.hunger + value);
+                        break;
+                    case 'energy':
+                        gameState.energy = Math.min(100, gameState.energy + value);
+                        break;
+                    case 'cleanliness':
+                        gameState.cleanliness = Math.min(100, gameState.cleanliness + value);
+                        break;
+                }
+                
+                // Aplicar efectos secundarios
+                if (sideEffects.hunger) gameState.hunger = Math.max(0, Math.min(100, gameState.hunger + sideEffects.hunger));
+                if (sideEffects.happiness) gameState.happiness = Math.max(0, Math.min(100, gameState.happiness + sideEffects.happiness));
+                if (sideEffects.cleanliness) gameState.cleanliness = Math.max(0, Math.min(100, gameState.cleanliness + sideEffects.cleanliness));
+                
+                gameState.xp += 8;
+                
+                let message = `¡${type === 'food' ? 'Comida' : type === 'energy' ? 'Energía' : 'Limpieza'} comprada! +${value} ${type}`;
+                if (sideEffects.hunger) message += `, ${sideEffects.hunger > 0 ? '+' : ''}${sideEffects.hunger} hambre`;
+                if (sideEffects.happiness) message += `, ${sideEffects.happiness > 0 ? '+' : ''}${sideEffects.happiness} felicidad`;
+                if (sideEffects.cleanliness) message += `, ${sideEffects.cleanliness > 0 ? '+' : ''}${sideEffects.cleanliness} limpieza`;
+                
+                showNotification(message);
                 updateUI();
             } else {
                 showNotification('No tienes suficiente dinero', 'error');
@@ -463,14 +766,18 @@
         // Comprar coleccionable
         function buyCollectible(cost, id) {
             if (gameState.money >= cost) {
-                if (!gameState.collectedItems.includes(id)) {
+                if (!gameState.collectedItems[id]) {
                     gameState.money -= cost;
-                    gameState.collectedItems.push(id);
+                    gameState.collectedItems[id] = 1;
                     gameState.xp += 50;
                     showNotification('¡Coleccionable adquirido! +50 XP');
                     updateUI();
                 } else {
-                    showNotification('Ya tienes este coleccionable', 'error');
+                    gameState.money -= cost;
+                    gameState.collectedItems[id]++;
+                    gameState.xp += 20;
+                    showNotification(`¡Otro ${collectibles.find(c => c.id === id).name} para tu colección! +20 XP`);
+                    updateUI();
                 }
             } else {
                 showNotification('No tienes suficiente dinero', 'error');
@@ -508,6 +815,17 @@
             }
         }
         
+        // Verificar salud de la mascota
+        function checkPetHealth() {
+            if (gameState.hunger <= 0 || gameState.happiness <= 0 || gameState.energy <= 0 || gameState.cleanliness <= 0) {
+                petImage.textContent = '💀';
+                petName.textContent = 'RIP Tamagotchi';
+                showNotification('¡Tu Tamagotchi ha muerto! Recarga la página para empezar de nuevo.', 'error');
+                return true;
+            }
+            return false;
+        }
+        
         // Mostrar animación de evolución
         function showEvolutionAnimation(newEmoji) {
             const evolutionDiv = document.createElement('div');
@@ -534,9 +852,17 @@
             
             collectibles.forEach(item => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = `collection-item ${gameState.collectedItems.includes(item.id) ? 'owned' : ''}`;
+                itemDiv.className = `collection-item ${gameState.collectedItems[item.id] ? 'owned' : ''}`;
                 itemDiv.textContent = item.emoji;
-                itemDiv.title = gameState.collectedItems.includes(item.id) ? item.name : '???';
+                itemDiv.title = gameState.collectedItems[item.id] ? `${item.name} (x${gameState.collectedItems[item.id]})` : '???';
+                
+                if (gameState.collectedItems[item.id]) {
+                    const countDiv = document.createElement('div');
+                    countDiv.className = 'collection-count';
+                    countDiv.textContent = gameState.collectedItems[item.id];
+                    itemDiv.appendChild(countDiv);
+                }
+                
                 collectionItems.appendChild(itemDiv);
             });
         }
@@ -547,9 +873,9 @@
             notification.className = 'notification';
             
             if (type === 'error') {
-                notification.style.backgroundColor = '#f44336';
-            } else if (type === 'success') {
-                notification.style.backgroundColor = '#4caf50';
+                notification.classList.add('error');
+            } else {
+                notification.classList.remove('error');
             }
             
             notification.classList.add('show');
