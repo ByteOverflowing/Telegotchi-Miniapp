@@ -773,7 +773,7 @@
 
         // Estado del juego
         const defaultGameState = {
-            uniqueId: false,
+            uniqueIdentifier: false,
             money: 50,
             hunger: 100,
             happiness: 100,
@@ -1232,7 +1232,7 @@
             hideDeathScreen();
             updateUI();
             saveGame();
-
+            updatePetImage()
             // Reiniciar el bucle del juego
             startGameLoop();
 
@@ -1279,11 +1279,12 @@
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
-                gameState.uniqueId = userId;
-                drawUniqueCreature("creatureCanvas", gameState.uniqueId, gameState.level, !gameState.isDead);
+                gameState.uniqueIdentifier = userId;
+                drawUniqueCreature("creatureCanvas", gameState.uniqueIdentifier, gameState.level, !gameState.isDead);
             }
             else {
-                if (!gameState.uniqueId) {
+              console.log(gameState)
+              if (!gameState.uniqueIdentifier) {
                     function generarSemillaUnica() {
                         // 1. Base: Fecha y hora actual en milisegundos
                         const fechaActual = Date.now();
@@ -1332,11 +1333,12 @@
                     const rng = new GeneradorAleatorioConSemilla(semilla);
 
                     // 3. Generar números aleatorios reproducibles
-                    
-                    console.log(rng.nextInt(1, 100)); // Ej: 42 (entre 1 y 100)
-                    gameState.uniqueId = toString(rng.nextInt(1000000000,9999999999))
+                    const randomId = rng.nextInt(1000000000,9999999999).toString()
+                    console.log(randomId)
+                    gameState.uniqueIdentifier = randomId
+                    console.log(gameState.uniqueIdentifier); // Ej: 42 (entre 1 y 100)
                 }
-                drawUniqueCreature("creatureCanvas", gameState.uniqueId, gameState.level, !gameState.isDead);
+                drawUniqueCreature("creatureCanvas", gameState.uniqueIdentifier, gameState.level, !gameState.isDead);
             }
         }
 
