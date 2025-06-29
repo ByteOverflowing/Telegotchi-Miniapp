@@ -1,29 +1,70 @@
-<!DOCTYPE html>
-<html lang="es">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="telegram-web-app-cloud-storage" content="true" />
-    <title>Telegotchi</title>
-
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
     <link
       rel="stylesheet"
       as="style"
       onload="this.rel='stylesheet'"
-      href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Spline+Sans:wght@400;500;700"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
     />
+
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+      /* Modal para pedir nombre */
+      #nameModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      #nameModalContent {
+        background: #1a2b1d;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 360px;
+        text-align: center;
+      }
+      #nameModal input {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+      #nameModal button {
+        margin-top: 1.2rem;
+        background: #94e0b2;
+        color: #141f18;
+        font-weight: 700;
+        border-radius: 9999px;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+      }
+      #nameModal button:hover {
+        background: #76c28a;
+      }
+    </style>
   </head>
   <body>
     <div
-      class="relative flex size-full min-h-screen flex-col bg-[#122118] dark group/design-root overflow-x-hidden"
+      class="relative flex size-full min-h-screen flex-col bg-[#141f18] dark group/design-root overflow-x-hidden"
       style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
     >
       <div class="layout-container flex h-full grow flex-col">
         <header
-          class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#264532] px-10 py-3"
+          class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2a4133] px-10 py-3"
         >
           <div class="flex items-center gap-4 text-white">
             <div class="size-4">
@@ -38,328 +79,294 @@
                 ></path>
               </svg>
             </div>
-            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">
-              Telegotchi - <span id="petNameDisplay"></span>
+            <h2
+              class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
+              id="headerTitle"
+            >
+              PetPal
             </h2>
           </div>
+          <div class="flex flex-1 justify-end gap-8">
+            <button
+              class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#2a4133] text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
+              title="Notificaciones"
+            >
+              <div
+                class="text-white"
+                data-icon="Bell"
+                data-size="20px"
+                data-weight="regular"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20px"
+                  height="20px"
+                  fill="currentColor"
+                  viewBox="0 0 256 256"
+                >
+                  <path
+                    d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"
+                  ></path>
+                </svg>
+              </div>
+            </button>
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCW7DpMCv1c2oFeb0q72NbvS07GrwyabPxDsa7rLmAFKp5wLU4vtaJzIFS57kOCjUTVjcHZrgcY-fW3AHntyhziDoQxgUlC2etiiAdRdtjKFFJ4QhY6Ri7Wi4F5prUhcb6ncnhmPs5V9VICDvGMI7tnWDIGl-T3uB9iny80KYUigIhExnVNWppMv8EApw3NnwoSg7KoL-mM-jirfjeXeFC79nqi9SGI0ix9MA24TmA74WVYQuSK88GxiRbgXh4lNQJcDyUhB2MYZP0");'
+            ></div>
+          </div>
         </header>
+        <div class="px-40 flex flex-1 justify-center py-5">
+          <div
+            class="layout-content-container flex flex-col max-w-[960px] flex-1 text-white"
+          >
+            <h2
+              class="tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5"
+            >
+              My Pet - <span id="petNameDisplay">...</span>
+            </h2>
+            <div class="flex w-full grow bg-[#141f18] @container p-4 rounded-xl border border-[#2a4133]">
+              <div
+                class="w-full gap-1 overflow-hidden bg-[#141f18] @[480px]:gap-2 aspect-[2/3] rounded-xl flex justify-center items-center"
+              >
+                <img
+                  id="pet"
+                  src="https://i.imgur.com/3XzKn3B.png"
+                  alt="Telegotchi"
+                  class="rounded-xl max-h-[300px] object-contain"
+                />
+              </div>
+            </div>
 
-        <main class="flex flex-col flex-1 px-6 py-4 gap-6">
-          <div class="flex justify-center">
-            <img
-              id="pet"
-              src="https://i.imgur.com/3XzKn3B.png"
-              alt="Telegotchi"
-              class="w-40 aspect-square rounded-xl border border-[#366348]"
-            />
-          </div>
-          <p id="status" class="text-center text-white font-medium">
-            Eclosionando...
-          </p>
+            <!-- Stats -->
+            <div class="flex flex-wrap gap-4 p-4">
+              <div
+                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+                title="0% = lleno, 100% = hambriento"
+              >
+                <p class="text-white text-base font-medium leading-normal">
+                  Hunger
+                </p>
+                <p
+                  class="text-white tracking-light text-2xl font-bold leading-tight"
+                  id="statHunger"
+                >
+                  50%
+                </p>
+              </div>
+              <div
+                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+              >
+                <p class="text-white text-base font-medium leading-normal">
+                  Happiness
+                </p>
+                <p
+                  class="text-white tracking-light text-2xl font-bold leading-tight"
+                  id="statHappiness"
+                >
+                  50%
+                </p>
+              </div>
+              <div
+                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+              >
+                <p class="text-white text-base font-medium leading-normal">
+                  Energy
+                </p>
+                <p
+                  class="text-white tracking-light text-2xl font-bold leading-tight"
+                  id="statEnergy"
+                >
+                  50%
+                </p>
+              </div>
+              <div
+                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+              >
+                <p class="text-white text-base font-medium leading-normal">
+                  Cleanliness
+                </p>
+                <p
+                  class="text-white tracking-light text-2xl font-bold leading-tight"
+                  id="statCleanliness"
+                >
+                  50%
+                </p>
+              </div>
+              <div
+                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+              >
+                <p class="text-white text-base font-medium leading-normal">Money</p>
+                <p
+                  class="text-white tracking-light text-2xl font-bold leading-tight"
+                  id="statMoney"
+                >
+                  $0
+                </p>
+              </div>
+            </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <button
-              onclick="feed('normalFood')"
-              class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold"
-            >
-              🍖 Alimentar
-            </button>
-            <button
-              onclick="play()"
-              class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold"
-            >
-              🎮 Jugar
-            </button>
-            <button
-              onclick="sleep()"
-              class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold"
-            >
-              😴 Dormir
-            </button>
-            <button
-              onclick="clean()"
-              class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold"
-            >
-              🧼 Limpiar
-            </button>
-          </div>
+            <!-- Botones acciones -->
+            <div class="flex justify-stretch px-4 gap-4 flex-wrap">
+              <button
+                id="btnFeed"
+                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Feed"
+              >
+                Feed 🍖
+              </button>
+              <button
+                id="btnPlay"
+                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Play"
+              >
+                Play 🎮
+              </button>
+              <button
+                id="btnSleep"
+                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Sleep"
+              >
+                Sleep 😴
+              </button>
+              <button
+                id="btnClean"
+                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Clean"
+              >
+                Clean 🧼
+              </button>
+            </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-white">
+            <!-- Tienda -->
+            <h3
+              class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-8"
+            >
+              Store
+            </h3>
             <div
-              class="rounded-xl border border-[#366348] p-4"
-              title="0 es lleno, 10 es hambriento"
+              class="flex flex-wrap gap-3 px-4 pb-6"
+              id="storeButtons"
             >
-              <p>Hambre: <span id="hunger">5</span></p>
-            </div>
-            <div class="rounded-xl border border-[#366348] p-4">
-              <p>Felicidad: <span id="happiness">5</span></p>
-            </div>
-            <div class="rounded-xl border border-[#366348] p-4">
-              <p>Energía: <span id="energy">5</span></p>
-            </div>
-            <div class="rounded-xl border border-[#366348] p-4">
-              <p>Limpieza: <span id="cleanliness">5</span></p>
-            </div>
-            <div
-              class="rounded-xl border border-[#366348] p-4 col-span-2 sm:col-span-1"
-            >
-              <p>💰 Dinero: $<span id="money">0</span></p>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <h2 class="text-white text-lg font-bold mb-2">Tienda</h2>
-            <div class="flex flex-wrap gap-3">
               <button
-                onclick="buyItem('food_basic')"
-                class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold"
+                data-type="food_basic"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Basic food (-Hunger) $5"
               >
-                Comprar comida básica ($5)
+                Food Basic ($5)
               </button>
               <button
-                onclick="buyItem('food_special')"
-                class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold"
+                data-type="food_special"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Special food (+Happiness, -Hunger) $8"
               >
-                Comprar comida especial (+felicidad) ($8)
+                Food Special ($8)
               </button>
               <button
-                onclick="buyItem('toy_basic')"
-                class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold"
+                data-type="toy_basic"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Toy Basic (+Happiness) $10"
               >
-                Comprar juguete básico ($10)
+                Toy Basic ($10)
               </button>
               <button
-                onclick="buyItem('toy_deluxe')"
-                class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold"
+                data-type="toy_deluxe"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Toy Deluxe (+Energy) $15"
               >
-                Comprar juguete deluxe (+energía) ($15)
+                Toy Deluxe ($15)
               </button>
               <button
-                onclick="buyItem('collectible_statue')"
-                class="bg-[#bfa14c] text-[#122118] rounded-xl py-2 px-4 font-bold"
-                title="Coleccionable raro"
+                data-type="collectible_statue"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#bfa14c] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Rare collectible statue $50"
               >
-                Estatua coleccionable ($50)
+                Statue Collectible ($50)
               </button>
               <button
-                onclick="buyItem('collectible_painting')"
-                class="bg-[#bfa14c] text-[#122118] rounded-xl py-2 px-4 font-bold"
-                title="Coleccionable muy raro"
+                data-type="collectible_painting"
+                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#bfa14c] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+                title="Very rare collectible painting $100"
               >
-                Pintura coleccionable ($100)
+                Painting Collectible ($100)
               </button>
             </div>
           </div>
-        </main>
+        </div>
       </div>
-    </div>
 
-    <script>
-      let hunger = 5,
-        happiness = 5,
-        energy = 5,
-        cleanliness = 5,
-        money = 0,
-        stage = "egg",
-        petName = "";
+      <!-- Modal pedir nombre -->
+      <div id="nameModal" style="display:none;">
+        <div id="nameModalContent">
+          <h2 style="color:#94e0b2; font-weight:bold; font-size:1.5rem;">¿Cómo se llama tu mascota?</h2>
+          <input
+            type="text"
+            id="petNameInput"
+            placeholder="Escribe un nombre"
+            maxlength="15"
+            autocomplete="off"
+          />
+          <button id="btnSaveName">Guardar</button>
+        </div>
+      </div>
 
-      // Guarda coleccionables comprados
-      let collectibles = {
-        statue: false,
-        painting: false,
-      };
+      <script>
+        // Estadísticas de 0 a 10 internas
+        let hunger = 5,
+          happiness = 5,
+          energy = 5,
+          cleanliness = 5,
+          money = 0,
+          stage = "egg",
+          petName = "";
 
-      // Pide nombre solo si no está guardado
-      async function askPetName() {
-        if (!petName) {
-          petName = prompt("¿Cómo se llama tu mascota?");
-          if (!petName) petName = "Telegotchi";
-          document.getElementById("petNameDisplay").innerText = petName;
-          await Telegram.WebApp.CloudStorage.setItems({ petName });
-        } else {
-          document.getElementById("petNameDisplay").innerText = petName;
+        // Coleccionables
+        let collectibles = {
+          statue: false,
+          painting: false,
+        };
+
+        const petNameDisplay = document.getElementById("petNameDisplay");
+        const headerTitle = document.getElementById("headerTitle");
+
+        // Mostrar modal para pedir nombre
+        const nameModal = document.getElementById("nameModal");
+        const petNameInput = document.getElementById("petNameInput");
+        const btnSaveName = document.getElementById("btnSaveName");
+
+        async function loadState() {
+          try {
+            const keys = await Telegram.WebApp.CloudStorage.getKeys();
+            const data = await Telegram.WebApp.CloudStorage.getItems(keys);
+            hunger = parseInt(data.hunger) || 5;
+            happiness = parseInt(data.happiness) || 5;
+            energy = parseInt(data.energy) || 5;
+            cleanliness = parseInt(data.cleanliness) || 5;
+            money = parseInt(data.money) || 0;
+            stage = data.stage || "egg";
+            petName = data.petName || "";
+            collectibles.statue = data.collectible_statue === "true";
+            collectibles.painting = data.collectible_painting === "true";
+
+            if (!petName) {
+              showNameModal();
+            } else {
+              updatePetNameDisplay();
+            }
+            updateStatsDisplay();
+            updatePetStage();
+          } catch (e) {
+            console.warn("No se pudo cargar estado:", e);
+            showNameModal();
+          }
         }
-      }
 
-      async function loadState() {
-        try {
-          const keys = await Telegram.WebApp.CloudStorage.getKeys();
-          const data = await Telegram.WebApp.CloudStorage.getItems(keys);
-          hunger = parseInt(data.hunger) || 5;
-          happiness = parseInt(data.happiness) || 5;
-          energy = parseInt(data.energy) || 5;
-          cleanliness = parseInt(data.cleanliness) || 5;
-          money = parseInt(data.money) || 0;
-          stage = data.stage || "egg";
-          petName = data.petName || "";
-          collectibles.statue = data.collectible_statue === "true";
-          collectibles.painting = data.collectible_painting === "true";
-
-          await askPetName();
-          updatePetStage();
-          updateStats();
-        } catch (err) {
-          console.warn("No se pudo cargar el estado:", err);
-          await askPetName();
-        }
-      }
-
-      async function saveState() {
-        try {
-          await Telegram.WebApp.CloudStorage.setItems({
-            hunger: hunger.toString(),
-            happiness: happiness.toString(),
-            energy: energy.toString(),
-            cleanliness: cleanliness.toString(),
-            money: money.toString(),
-            stage: stage,
-            petName: petName,
-            collectible_statue: collectibles.statue.toString(),
-            collectible_painting: collectibles.painting.toString(),
-          });
-        } catch (err) {
-          console.warn("No se pudo guardar el estado:", err);
-        }
-      }
-
-      function updateStats() {
-        document.getElementById("hunger").innerText = hunger;
-        document.getElementById("happiness").innerText = happiness;
-        document.getElementById("energy").innerText = energy;
-        document.getElementById("cleanliness").innerText = cleanliness;
-        document.getElementById("money").innerText = money;
-        saveState();
-      }
-
-      function updatePetStage() {
-        const petImg = document.getElementById("pet");
-        const statusText = document.getElementById("status");
-
-        if (stage === "baby") {
-          // Imagen caricatura (un zorro caricaturesco)
-          petImg.src = "https://i.imgur.com/3XzKn3B.png";
-          statusText.innerText = `¡Hola! Soy tu Telegotchi, ${petName}`;
-        } else {
-          petImg.src = "https://i.imgur.com/LkG7xF8.png"; // Huevo diferente
-          statusText.innerText = "Eclosionando...";
-        }
-      }
-
-      function feed(type = "normalFood") {
-        if (money < 5) {
-          alert("¡No tienes suficiente dinero!");
-          return;
-        }
-        if (type === "normalFood") {
-          hunger = Math.max(0, hunger - 3); // Disminuye hambre (0 = lleno)
-          money -= 5;
-        } else if (type === "food_basic") {
-          if (money < 5) return alert("¡No tienes suficiente dinero!");
-          hunger = Math.max(0, hunger - 4);
-          money -= 5;
-        } else if (type === "food_special") {
-          if (money < 8) return alert("¡No tienes suficiente dinero!");
-          happiness = Math.min(10, happiness + 2);
-          hunger = Math.max(0, hunger - 2);
-          money -= 8;
-        }
-        updateStats();
-      }
-
-      function play() {
-        if (energy <= 1) {
-          alert("¡Estoy demasiado cansado para jugar!");
-          return;
-        }
-        happiness = Math.min(10, happiness + 2);
-        energy = Math.max(0, energy - 2);
-        money += 1;
-        updateStats();
-      }
-
-      function sleep() {
-        energy = 10;
-        happiness = Math.max(0, happiness - 1);
-        updateStats();
-      }
-
-      function clean() {
-        cleanliness = 10;
-        money += 1;
-        updateStats();
-      }
-
-      function buyItem(type) {
-        switch (type) {
-          case "food_basic":
-            if (money < 5) return alert("¡No tienes suficiente dinero!");
-            money -= 5;
-            hunger = Math.max(0, hunger - 4);
-            break;
-          case "food_special":
-            if (money < 8) return alert("¡No tienes suficiente dinero!");
-            money -= 8;
-            happiness = Math.min(10, happiness + 2);
-            hunger = Math.max(0, hunger - 2);
-            break;
-          case "toy_basic":
-            if (money < 10) return alert("¡No tienes suficiente dinero!");
-            money -= 10;
-            happiness = Math.min(10, happiness + 3);
-            break;
-          case "toy_deluxe":
-            if (money < 15) return alert("¡No tienes suficiente dinero!");
-            money -= 15;
-            energy = Math.min(10, energy + 3);
-            break;
-          case "collectible_statue":
-            if (money < 50) return alert("¡No tienes suficiente dinero!");
-            if (collectibles.statue) return alert("¡Ya tienes esta estatua!");
-            money -= 50;
-            collectibles.statue = true;
-            alert("¡Has comprado una estatua coleccionable!");
-            break;
-          case "collectible_painting":
-            if (money < 100) return alert("¡No tienes suficiente dinero!");
-            if (collectibles.painting) return alert("¡Ya tienes esta pintura!");
-            money -= 100;
-            collectibles.painting = true;
-            alert("¡Has comprado una pintura coleccionable!");
-            break;
-          default:
-            alert("Artículo desconocido");
-            return;
-        }
-        updateStats();
-      }
-
-      function hatch() {
-        setTimeout(() => {
-          stage = "baby";
-          updatePetStage();
-          updateStats();
-        }, 3000);
-      }
-
-      // Disminuye stats automáticamente cada cierto tiempo (ejemplo cada 20 segundos)
-      function decreaseStatsOverTime() {
-        setInterval(() => {
-          if (stage !== "baby") return;
-
-          hunger = Math.min(10, hunger + 1); // hambre aumenta (más hambriento)
-          happiness = Math.max(0, happiness - 1);
-          energy = Math.max(0, energy - 1);
-          cleanliness = Math.max(0, cleanliness - 1);
-          updateStats();
-        }, 20000);
-      }
-
-      Telegram.WebApp.ready();
-
-      loadState().then(() => {
-        if (stage === "egg") hatch();
-        decreaseStatsOverTime();
-      });
-    </script>
-  </body>
-</html>
+        async function saveState() {
+          try {
+            await Telegram.WebApp.CloudStorage.setItems({
+              hunger: hunger.toString(),
+              happiness: happiness.toString(),
+              energy: energy.toString(),
+              cleanliness: cleanliness.toString(),
+              money: money.toString(),
+             
