@@ -19,17 +19,17 @@ class Tamagotchi {
         this.tapsToday = 0;
         this.lastTapDate = new Date().toDateString();
     }
-    
+
     update() {
         const now = new Date();
         const hoursPassed = (now - this.lastUpdate) / (1000 * 60 * 60);
-        
+
         // Reset taps if new day
         if (now.toDateString() !== this.lastTapDate) {
             this.tapsToday = 0;
             this.lastTapDate = now.toDateString();
         }
-        
+
         if (this.isAlive) {
             if (!this.isSleeping) {
                 this.hunger = Math.min(100, Math.max(0, this.hunger + hoursPassed * 5));
@@ -40,16 +40,16 @@ class Tamagotchi {
                 this.energy = Math.min(100, Math.max(0, this.energy + hoursPassed * 10));
                 this.hunger = Math.min(100, Math.max(0, this.hunger + hoursPassed * 2));
             }
-            
+
             this.age = (now - this.birthDate) / (1000 * 60 * 60 * 24);
-            
+
             // Evolución
             if (this.age >= 3 && this.stage === "egg") {
                 this.stage = "baby";
             } else if (this.age >= 7 && this.stage === "baby") {
                 this.stage = "adult";
             }
-            
+
             // Verificar muerte
             if (this.hunger >= 100 || this.happiness <= 0 || this.energy <= 0) {
                 this.isAlive = false;
@@ -69,10 +69,10 @@ class Tamagotchi {
                 }
             }
         }
-        
+
         this.lastUpdate = now;
     }
-    
+
     feed(amount = 30) {
         if (!this.isAlive) return false;
         this.hunger = Math.max(0, this.hunger - amount);
@@ -80,7 +80,7 @@ class Tamagotchi {
         this.update();
         return true;
     }
-    
+
     play() {
         if (!this.isAlive || this.isSleeping) return false;
         this.happiness = Math.min(100, this.happiness + 20);
@@ -89,7 +89,7 @@ class Tamagotchi {
         this.update();
         return true;
     }
-    
+
     sleep() {
         if (!this.isAlive) return false;
         this.isSleeping = !this.isSleeping;
@@ -97,14 +97,14 @@ class Tamagotchi {
         this.update();
         return true;
     }
-    
+
     clean() {
         if (!this.isAlive) return false;
         this.cleanliness = 100;
         this.update();
         return true;
     }
-    
+
     revive() {
         if (this.isAlive) return false;
         this.isAlive = true;
@@ -117,7 +117,7 @@ class Tamagotchi {
         this.update();
         return true;
     }
-    
+
     collectMoney() {
         const now = new Date();
         const hoursPassed = (now - this.lastEnergyRecovery) / (1000 * 60 * 60);
@@ -128,20 +128,21 @@ class Tamagotchi {
         }
         return false;
     }
-    
+
     tap() {
         if (this.tapsToday < 5) {
             this.money += 2;
             this.tapsToday++;
+            this.update();
             return true;
         }
         return false;
     }
-    
+
     buyItem(item) {
         if (this.money >= item.cost) {
             this.money -= item.cost;
-            
+
             if (item.type === 'food') {
                 this.feed(item.hunger || 20);
             } else if (item.type === 'toy') {
@@ -153,12 +154,12 @@ class Tamagotchi {
                     date: new Date()
                 });
             }
-            
+
             return true;
         }
         return false;
     }
-    
+
     calculateRecoveryTime() {
         if (this.isSleeping) {
             const missingEnergy = 100 - this.energy;
@@ -167,13 +168,13 @@ class Tamagotchi {
         }
         return 0;
     }
-    
+
     work() {
         const earnings = 2;
         this.money += earnings;
         return earnings;
     }
-    
+
     toJSON() {
         return {
             name: this.name,
@@ -196,7 +197,7 @@ class Tamagotchi {
             lastTapDate: this.lastTapDate
         };
     }
-    
+
     static fromJSON(json) {
         const pet = new Tamagotchi(json.name);
         pet.birthDate = new Date(json.birthDate);
@@ -227,8 +228,9 @@ let workEarnings = 0;
 let workProgress = 0;
 
 async function savePetData() {
+    if (!pet) return;
+
     const data = JSON.stringify(pet);
-    
     try {
         if (window.Telegram?.WebApp?.CloudStorage) {
             await Telegram.WebApp.CloudStorage.setItem('tamagotchi', data);
@@ -274,26 +276,26 @@ function showInitForm() {
 async function createPet() {
     const nameInput = document.getElementById('pet-name-input');
     const name = nameInput.value.trim() || "Tammy";
-    
+
     pet = new Tamagotchi(name);
     await savePetData();
-    
+
     document.getElementById('init-form').classList.add('hidden');
     document.querySelector('.pet-container').classList.remove('hidden');
     document.querySelector('.stats').classList.remove('hidden');
     document.querySelector('.info').classList.remove('hidden');
     document.querySelector('.actions').classList.remove('hidden');
-    
+
     renderPet();
 }
 
 function updateBar(id, value) {
     const bar = document.getElementById(`${id}-bar`);
     const text = document.getElementById(`${id}-value`);
-    
+
     bar.style.width = `${value}%`;
     text.textContent = `${Math.round(value)}%`;
-    
+
     if (value > 70) {
         bar.style.backgroundColor = value === 100 ? '#f44336' : '#ff9800';
     } else if (value < 30) {
@@ -352,45 +354,45 @@ function updateTapInfo() {
 
 async function renderPet() {
     if (!pet) return;
-    
+
     pet.update();
     await savePetData();
-    
+
     document.getElementById('pet-name').textContent = pet.name;
     document.getElementById('pet-state').textContent = getStateText(pet.state);
     document.getElementById('pet-state').className = `state ${pet.state}`;
-    
+
     updateBar('hunger', pet.hunger);
     updateBar('happiness', pet.happiness);
     updateBar('energy', pet.energy);
     updateBar('cleanliness', pet.cleanliness);
-    
+
     document.getElementById('info-name').textContent = pet.name;
     document.getElementById('info-age').textContent = pet.age.toFixed(1);
     document.getElementById('info-weight').textContent = pet.weight;
     document.getElementById('info-state').textContent = getStageText(pet.stage);
     document.getElementById('money').textContent = pet.money;
     document.getElementById('inventory-count').textContent = pet.inventory.length;
-    
+
     updateRecoveryTime();
     updateTapInfo();
-    
+
     const petElement = document.getElementById('pet');
     petElement.className = 'pet';
-    
+
     if (!pet.isAlive) {
         petElement.classList.add('dead-pet');
         document.getElementById('revive-btn').classList.remove('hidden');
     } else {
         petElement.classList.add(pet.stage);
-        
+
         if (pet.state === 'happy') {
             petElement.classList.add('happy-animation');
         } else if (pet.state === 'sad') {
             petElement.classList.add('sad-animation');
         }
     }
-    
+
     document.getElementById('sleep-btn').textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
 }
 
@@ -400,23 +402,25 @@ function startWork() {
     workProgress = 0;
     document.getElementById('work-earned').textContent = '0';
     document.getElementById('work-bar').style.width = '0%';
-    
+
     // Configurar evento de clic
-    document.getElementById('work-click-area').onclick = () => {
+    document.getElementById('work-click-area').onclick = async () => {
         workEarnings += pet.work();
         document.getElementById('work-earned').textContent = workEarnings;
-        
+
         workProgress = Math.min(100, workProgress + 15);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
-        
+
         if (workProgress >= 100) {
-            workEarnings += 5; // Bonus por completar
+            workEarnings += 5;
             document.getElementById('work-earned').textContent = workEarnings;
             workProgress = 0;
             document.getElementById('work-bar').style.width = '0%';
         }
+
+        await renderPet(); // Actualizar UI y guardar
     };
-    
+
     // Configurar pérdida progresiva
     workInterval = setInterval(() => {
         workProgress = Math.max(0, workProgress - 1);
@@ -438,16 +442,16 @@ async function initApp() {
         tg.expand();
         tg.enableClosingConfirmation();
     }
-    
+
     // Migrar datos antiguos
     const oldLocalData = localStorage.getItem('tamagotchi');
     if (oldLocalData && !await loadPetData()) {
         await savePetData(JSON.parse(oldLocalData));
         localStorage.removeItem('tamagotchi');
     }
-    
+
     const savedPet = await loadPetData();
-    
+
     if (savedPet) {
         pet = Tamagotchi.fromJSON(savedPet);
         pet.update();
@@ -455,7 +459,7 @@ async function initApp() {
     } else {
         showInitForm();
     }
-    
+
     // Configurar eventos
     document.getElementById('feed-btn').addEventListener('click', async () => {
         if (pet.feed()) {
@@ -463,14 +467,14 @@ async function initApp() {
             await renderPet();
         }
     });
-    
+
     document.getElementById('play-btn').addEventListener('click', async () => {
         if (pet.play()) {
             showMessage("⚽ Has jugado con tu Tamagotchi!");
             await renderPet();
         }
     });
-    
+
     document.getElementById('sleep-btn').addEventListener('click', async () => {
         if (pet.sleep()) {
             const action = pet.isSleeping ? "dormido" : "despertado";
@@ -478,49 +482,49 @@ async function initApp() {
             await renderPet();
         }
     });
-    
+
     document.getElementById('clean-btn').addEventListener('click', async () => {
         if (pet.clean()) {
             showMessage("🚿 Has limpiado a tu Tamagotchi!");
             await renderPet();
         }
     });
-    
+
     document.getElementById('revive-btn').addEventListener('click', async () => {
         if (pet.revive()) {
             showMessage("💖 Has revivido a tu Tamagotchi!");
             await renderPet();
         }
     });
-    
+
     document.getElementById('shop-btn').addEventListener('click', () => {
         document.getElementById('shop').classList.toggle('hidden');
     });
-    
+
     document.getElementById('work-btn').addEventListener('click', startWork);
     document.getElementById('work-stop').addEventListener('click', stopWork);
-    
+
     document.getElementById('create-btn').addEventListener('click', createPet);
-    
+
     document.getElementById('pet-container').addEventListener('click', async () => {
         const petElement = document.getElementById('pet');
         petElement.classList.add('shake');
-        
+
         if (pet.isAlive) {
             const earned = pet.tap();
             if (earned) {
                 showMessage("+$2 por jugar con tu mascota!");
-                await renderPet();
+                await renderPet(); // Forzar actualización
             } else {
                 showMessage("Límite diario alcanzado (5 toques/día)");
             }
         }
-        
+
         setTimeout(() => {
             petElement.classList.remove('shake');
         }, 500);
     });
-    
+
     document.querySelectorAll('.item').forEach(item => {
         item.addEventListener('click', async () => {
             const cost = parseInt(item.dataset.cost);
@@ -531,7 +535,7 @@ async function initApp() {
                 happiness: parseInt(item.dataset.happiness) || 0,
                 name: item.dataset.name || item.textContent.trim()
             };
-            
+
             if (pet.buyItem(itemData)) {
                 showMessage(`¡Compra realizada! ${item.textContent.trim()}`);
                 await renderPet();
@@ -540,14 +544,15 @@ async function initApp() {
             }
         });
     });
-    
+
     // Generar dinero pasivo
     setInterval(async () => {
         if (pet?.collectMoney()) {
-            await renderPet();
+            await renderPet(); // Actualizar UI después de ganar dinero
+            showMessage("¡Has ganado $5 por tiempo jugado!");
         }
     }, 60000);
-    
+
     // Actualizar tiempo de recuperación
     setInterval(() => {
         updateRecoveryTime();
