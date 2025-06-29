@@ -355,23 +355,31 @@ function updateTapInfo() {
 async function renderPet() {
     if (!pet) return;
 
+    // Actualizar primero el modelo
     pet.update();
-    await savePetData();
 
-    document.getElementById('pet-name').textContent = pet.name;
-    document.getElementById('pet-state').textContent = getStateText(pet.state);
-    document.getElementById('pet-state').className = `state ${pet.state}`;
+    // Actualizar TODOS los elementos de la UI
+    document.getElementById('money').textContent = pet.money;
+    document.getElementById('hunger-value').textContent = Math.round(pet.hunger);
+    document.getElementById('happiness-value').textContent = Math.round(pet.happiness);
+    document.getElementById('energy-value').textContent = Math.round(pet.energy);
+    document.getElementById('cleanliness-value').textContent = Math.round(pet.cleanliness);
 
+    // Actualizar barras visuales
     updateBar('hunger', pet.hunger);
     updateBar('happiness', pet.happiness);
     updateBar('energy', pet.energy);
     updateBar('cleanliness', pet.cleanliness);
 
+    // Resto de actualizaciones...
+    document.getElementById('pet-name').textContent = pet.name;
+    document.getElementById('pet-state').textContent = getStateText(pet.state);
+    document.getElementById('pet-state').className = `state ${pet.state}`;
+
     document.getElementById('info-name').textContent = pet.name;
     document.getElementById('info-age').textContent = pet.age.toFixed(1);
     document.getElementById('info-weight').textContent = pet.weight;
     document.getElementById('info-state').textContent = getStageText(pet.stage);
-    document.getElementById('money').textContent = pet.money;
     document.getElementById('inventory-count').textContent = pet.inventory.length;
 
     updateRecoveryTime();
@@ -394,6 +402,9 @@ async function renderPet() {
     }
 
     document.getElementById('sleep-btn').textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
+
+    // Guardar los cambios
+    await savePetData();
 }
 
 function startWork() {
@@ -403,8 +414,10 @@ function startWork() {
     document.getElementById('work-earned').textContent = '0';
     document.getElementById('work-bar').style.width = '0%';
 
+    // Configurar evento de clic
     document.getElementById('work-click-area').onclick = async () => {
-        pet.money += 2; // Cambio directo al dinero de la mascota
+        // CORRECCIÓN: Modificar el dinero directamente
+        pet.money += 2;
         workEarnings += 2;
         document.getElementById('work-earned').textContent = workEarnings;
         
@@ -419,15 +432,21 @@ function startWork() {
             document.getElementById('work-bar').style.width = '0%';
         }
         
-        await renderPet(); // Actualización inmediata
+        // CORRECCIÓN: Actualizar UI inmediatamente
+        document.getElementById('money').textContent = pet.money;
     };
+    
+    // Configurar pérdida progresiva
+    workInterval = setInterval(() => {
+        workProgress = Math.max(0, workProgress - 1);
+        document.getElementById('work-bar').style.width = `${workProgress}%`;
+    }, 200);
 }
 
-function stopWork() {
+async function stopWork() {
     clearInterval(workInterval);
-    pet.money += workEarnings;
     document.getElementById('work-minigame').classList.add('hidden');
-    renderPet();
+    await renderPet(); // Actualizar UI completa
     showMessage(`¡Ganaste $${workEarnings}!`);
 }
 
@@ -530,10 +549,12 @@ async function initApp() {
                 happiness: parseInt(item.dataset.happiness) || 0,
                 name: item.dataset.name || item.textContent.trim()
             };
-
+            
             if (pet.buyItem(itemData)) {
+                // CORRECCIÓN: Actualizar dinero inmediatamente
+                document.getElementById('money').textContent = pet.money;
+                await renderPet(); // Actualizar el resto de la UI
                 showMessage(`¡Compra realizada! ${item.textContent.trim()}`);
-                await renderPet();
             } else {
                 showMessage("No tienes suficiente dinero");
             }
