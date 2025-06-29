@@ -435,7 +435,7 @@
         
         <div class="pet-container" id="petContainer">
             <div class="pet-level" id="petLevel">1</div>
-            <div class="pet-image" id="petImage">🥚</div>
+            <div class="pet-image" id="petImage"><canvas id="creatureCanvas"></canvas></div>
             <h2 id="petName">Huevo Telegotchi</h2>
             <div class="money">💰 $<span id="moneyAmount">50</span></div>
             
@@ -609,6 +609,159 @@
     <div class="notification" id="notification"></div>
     
     <script>
+        function drawUniqueCreature(canvasId, userId, level = 1, isAlive = true) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      let time = 0;
+
+      function hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash);
+          hash |= 0;
+        }
+        return Math.abs(hash);
+      }
+
+      function generateCreatureData(id, level) {
+        const seed = hashCode(id);
+        return {
+          bodyColor: `hsl(${seed % 360}, 70%, 60%)`,
+          eyeCount: 1 + (seed % 4) + Math.floor(level / 3),
+          eyeShape: seed % 3,
+          hornStyle: (seed + level) % 8,
+          size: 40 + (seed % 30) + level * 3,
+          mouthType: seed % 4,
+          tail: seed % 2 === 0 || level > 2,
+          wing: seed % 5 === 0 || level > 4,
+          antenna: level > 3 && (seed % 2 === 0),
+          pattern: level > 2,
+          blinkRate: 200 + (seed % 100),
+          cheeks: level > 1 && seed % 3 === 0,
+          accessory: level > 5 ? (seed % 6) : null,
+          earStyle: level > 6 ? (seed % 3) : null,
+          extraArms: level > 7 ? (seed % 2 === 0) : false,
+          tailStyle: level > 8 ? (seed % 3) : 0,
+          eyeColor: `hsl(${(seed * 7) % 360}, 80%, 70%)`
+        };
+      }
+
+      let currentId = userId;
+      let currentData = generateCreatureData(userId, level);
+
+      function drawCreature(data, time = 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const bounce = isAlive ? Math.sin(time / 100) * 4 : 0;
+
+        ctx.save();
+        ctx.translate(0, bounce);
+
+        // cuerpo
+        ctx.fillStyle = data.bodyColor;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, data.size, data.size * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // patrón
+        if (data.pattern && isAlive) {
+          ctx.strokeStyle = 'white';
+          for (let i = -3; i <= 3; i++) {
+            ctx.beginPath();
+            ctx.arc(centerX + i * 6, centerY + 5, 3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // brazos extra
+        if (data.extraArms && isAlive) {
+          ctx.strokeStyle = 'gray';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(centerX - data.size, centerY);
+          ctx.lineTo(centerX - data.size - 15, centerY + 20);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(centerX + data.size, centerY);
+          ctx.lineTo(centerX + data.size + 15, centerY + 20);
+          ctx.stroke();
+        }
+
+        // ojos
+        const spacing = 18;
+        const blinking = Math.floor(time / data.blinkRate) % 2 === 0;
+        for (let i = 0; i < data.eyeCount; i++) {
+          const x = centerX - ((data.eyeCount - 1) * spacing) / 2 + i * spacing;
+          ctx.fillStyle = isAlive ? 'white' : '#444';
+          ctx.beginPath();
+          ctx.ellipse(x, centerY - 10, 8, blinking && isAlive ? 2 : 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = isAlive ? data.eyeColor : 'black';
+          ctx.beginPath();
+          if (!isAlive) {
+            ctx.moveTo(x - 3, centerY - 13);
+            ctx.lineTo(x + 3, centerY - 7);
+            ctx.moveTo(x + 3, centerY - 13);
+            ctx.lineTo(x - 3, centerY - 7);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else if (!blinking) {
+            if (data.eyeShape === 0) ctx.arc(x, centerY - 10, 3, 0, Math.PI * 2);
+            else if (data.eyeShape === 1) ctx.rect(x - 2, centerY - 12, 4, 6);
+            else ctx.ellipse(x, centerY - 10, 2, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // mejillas
+        if (data.cheeks && isAlive) {
+          ctx.fillStyle = 'pink';
+          ctx.beginPath();
+          ctx.arc(centerX - 20, centerY + 5, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(centerX + 20, centerY + 5, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // boca (muerta = cruz o nada)
+        ctx.beginPath();
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        if (!isAlive) {
+          ctx.moveTo(centerX - 5, centerY + 20);
+          ctx.lineTo(centerX + 5, centerY + 20);
+        } else if (data.mouthType === 0) ctx.arc(centerX, centerY + 20, 10, 0, Math.PI);
+        else if (data.mouthType === 1) ctx.arc(centerX, centerY + 25, 10, Math.PI, 0);
+        else if (data.mouthType === 2) {
+          ctx.moveTo(centerX - 8, centerY + 20);
+          ctx.lineTo(centerX + 8, centerY + 20);
+        } else {
+          ctx.moveTo(centerX, centerY + 20);
+          ctx.lineTo(centerX, centerY + 30);
+        }
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function animate() {
+        drawCreature(currentData, time);
+        time++;
+        requestAnimationFrame(animate);
+      }
+
+      canvas.addEventListener('click', () => {
+        const randomId = Math.random().toString(36).substring(2);
+        currentData = generateCreatureData(randomId, level);
+      });
+
+      animate();
+    }
+
         // Estado del juego
         const defaultGameState = {
             money: 50,
@@ -1112,10 +1265,10 @@
         
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
-            if (gameState.isDead) {
-                petImage.textContent = '💀';
-            } else {
-                petImage.textContent = petStages[gameState.petStage].emoji;
+            if(window.Telegram?.WebApp?.initDataUnsafe?.user){
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                const userId = user.id;
+                drawUniqueCreature("creatureCanvas", userId, gameState.level, !gameState.isDead);
             }
         }
         
@@ -1408,8 +1561,7 @@
             // Eliminar la animación después de 3 segundos
             setTimeout(() => {
                 petContainer.removeChild(evolutionDiv);
-                petImage.textContent = newEmoji;
-                petName.textContent = gameState.petName;
+                
             }, 3000);
         }
         
