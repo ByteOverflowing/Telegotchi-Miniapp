@@ -179,6 +179,22 @@
             background-color: #e64a19;
         }
         
+        .revive-button {
+            background-color: #4caf50;
+        }
+        
+        .revive-button:hover {
+            background-color: #3d8b40;
+        }
+        
+        .reset-button {
+            background-color: #f44336;
+        }
+        
+        .reset-button:hover {
+            background-color: #d32f2f;
+        }
+        
         .shop {
             display: none;
             background-color: #f9f9f9;
@@ -367,6 +383,50 @@
             color: #f44336;
             font-weight: bold;
         }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .modal-button {
+            margin: 10px 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        
+        .death-screen {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .death-screen h2 {
+            color: #f44336;
+        }
     </style>
 </head>
 <body>
@@ -375,8 +435,8 @@
         
         <div class="pet-container" id="petContainer">
             <div class="pet-level" id="petLevel">1</div>
-            <div class="pet-image" id="petImage">🐣</div>
-            <h2 id="petName">Bebé Telegotchi</h2>
+            <div class="pet-image" id="petImage">🥚</div>
+            <h2 id="petName">Huevo Telegotchi</h2>
             <div class="money">💰 $<span id="moneyAmount">50</span></div>
             
             <div class="stats">
@@ -406,9 +466,16 @@
                 </div>
             </div>
             <div class="death-timer" id="deathTimer"></div>
+            
+            <div class="death-screen" id="deathScreen" style="display: none;">
+                <h2>¡Tu Telegotchi ha muerto!</h2>
+                <p id="deathMessage"></p>
+                <button class="revive-button" id="reviveButton">Revivir por $1000</button>
+                <button class="reset-button" id="resetButton">Comenzar de nuevo</button>
+            </div>
         </div>
         
-        <div class="buttons">
+        <div class="buttons" id="actionButtons">
             <button id="feedButton">Alimentar ($10)</button>
             <button id="playButton">Jugar</button>
             <button class="work-button" id="workButton">Trabajar (+$15)</button>
@@ -528,6 +595,17 @@
         </div>
     </div>
     
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <h2>¡Bienvenido a Telegotchi!</h2>
+            <p>Elige un nombre para tu Telegotchi:</p>
+            <input type="text" class="modal-input" id="petNameInput" maxlength="20" placeholder="Nombre de tu Telegotchi">
+            <div>
+                <button class="modal-button" id="confirmNameButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="notification" id="notification"></div>
     
     <script>
@@ -543,6 +621,7 @@
             collectedItems: {},
             petStage: 'egg',
             petName: 'Huevo Telegotchi',
+            customName: false,
             workCooldown: false,
             sleepCooldown: false,
             lastUpdate: Date.now(),
@@ -553,10 +632,15 @@
                 energy: 0,
                 cleanliness: 0
             },
-            deathWarningShown: false
+            deathWarningShown: false,
+            isDead: false,
+            deathReason: ''
         };
         
         let gameState = {...defaultGameState};
+        let currentMinigame = null;
+        let saveInterval;
+        let gameLoopInterval;
         
         // Elementos del DOM
         const petImage = document.getElementById('petImage');
@@ -574,10 +658,15 @@
         const cleanButton = document.getElementById('cleanButton');
         const shopButton = document.getElementById('shopButton');
         const eventButton = document.getElementById('eventButton');
+        const reviveButton = document.getElementById('reviveButton');
+        const resetButton = document.getElementById('resetButton');
         const shop = document.getElementById('shop');
         const collectionItems = document.getElementById('collectionItems');
         const notification = document.getElementById('notification');
         const petContainer = document.getElementById('petContainer');
+        const actionButtons = document.getElementById('actionButtons');
+        const deathScreen = document.getElementById('deathScreen');
+        const deathMessage = document.getElementById('deathMessage');
         const tabs = document.querySelectorAll('.tab');
         const shopContents = document.querySelectorAll('.shop-content');
         const minigameContainer = document.getElementById('minigameContainer');
@@ -588,8 +677,11 @@
         const minigameCounter = document.getElementById('minigameCounter');
         const minigameClose = document.getElementById('minigameClose');
         const deathTimer = document.getElementById('deathTimer');
+        const nameModal = document.getElementById('nameModal');
+        const petNameInput = document.getElementById('petNameInput');
+        const confirmNameButton = document.getElementById('confirmNameButton');
         
-        // Configuración de etapas de la mascota (ahora con más evoluciones)
+        // Configuración de etapas de la mascota
         const petStages = {
             egg: { emoji: '🥚', name: 'Huevo Telegotchi', nextXp: 100, minLevel: 1 },
             baby1: { emoji: '🐣', name: 'Bebé Telegotchi', nextXp: 300, minLevel: 2 },
@@ -637,10 +729,34 @@
         // Inicializar el juego
         function initGame() {
             loadGame();
+            
+            // Mostrar modal de nombre solo si es la primera vez o no tiene nombre personalizado
+            if (!gameState.customName) {
+                showNameModal();
+            } else {
+                setupGame();
+            }
+        }
+        
+        // Configurar el juego después de establecer el nombre
+        function setupGame() {
             updateUI();
             setupEventListeners();
             startGameLoop();
             checkDailyEvent();
+            
+            // Guardar constantemente cada 5 segundos
+            saveInterval = setInterval(saveGame, 5000);
+        }
+        
+        // Mostrar modal para elegir nombre
+        function showNameModal() {
+            nameModal.style.display = 'flex';
+        }
+        
+        // Cerrar modal de nombre
+        function closeNameModal() {
+            nameModal.style.display = 'none';
         }
         
         // Cargar el juego guardado
@@ -653,8 +769,8 @@
                 const now = Date.now();
                 const timeElapsed = Math.floor((now - parsedGame.lastUpdate) / 1000); // en segundos
                 
-                // Aplicar degradación basada en el tiempo transcurrido
-                if (timeElapsed > 0) {
+                // Solo aplicar degradación si no está muerto
+                if (!parsedGame.isDead && timeElapsed > 0) {
                     const minutesElapsed = Math.floor(timeElapsed / 60);
                     const hoursElapsed = Math.floor(minutesElapsed / 60);
                     
@@ -675,26 +791,12 @@
                 
                 parsedGame.lastUpdate = now;
                 gameState = parsedGame;
+                
+                // Si está muerto, mostrar pantalla de muerte
+                if (gameState.isDead) {
+                    showDeathScreen();
+                }
             }
-        }
-        
-        // Actualizar temporizador de negligencia
-        function updateNeglectTimer(state, hoursElapsed) {
-            // Tiempo máximo de negligencia (30 horas)
-            const maxNeglect = 30;
-            
-            // Actualizar temporizadores para cada estadística
-            if (state.hunger <= 30) state.neglectTimer.hunger = Math.min(maxNeglect, state.neglectTimer.hunger + hoursElapsed);
-            else state.neglectTimer.hunger = Math.max(0, state.neglectTimer.hunger - hoursElapsed * 2);
-            
-            if (state.happiness <= 30) state.neglectTimer.happiness = Math.min(maxNeglect, state.neglectTimer.happiness + hoursElapsed);
-            else state.neglectTimer.happiness = Math.max(0, state.neglectTimer.happiness - hoursElapsed * 2);
-            
-            if (state.energy <= 30) state.neglectTimer.energy = Math.min(maxNeglect, state.neglectTimer.energy + hoursElapsed);
-            else state.neglectTimer.energy = Math.max(0, state.neglectTimer.energy - hoursElapsed * 2);
-            
-            if (state.cleanliness <= 30) state.neglectTimer.cleanliness = Math.min(maxNeglect, state.neglectTimer.cleanliness + hoursElapsed);
-            else state.neglectTimer.cleanliness = Math.max(0, state.neglectTimer.cleanliness - hoursElapsed * 2);
         }
         
         // Guardar el estado del juego
@@ -713,6 +815,9 @@
             cleanButton.addEventListener('click', cleanPet);
             shopButton.addEventListener('click', toggleShop);
             eventButton.addEventListener('click', startDailyEvent);
+            reviveButton.addEventListener('click', revivePet);
+            resetButton.addEventListener('click', resetGame);
+            confirmNameButton.addEventListener('click', setPetName);
             
             // Tabs de la tienda
             tabs.forEach(tab => {
@@ -758,38 +863,58 @@
             window.addEventListener('beforeunload', saveGame);
         }
         
+        // Establecer nombre de la mascota
+        function setPetName() {
+            const name = petNameInput.value.trim();
+            if (name) {
+                gameState.petName = name;
+                gameState.customName = true;
+                petName.textContent = name;
+                closeNameModal();
+                setupGame();
+                saveGame();
+            } else {
+                showNotification('Por favor ingresa un nombre válido', 'error');
+            }
+        }
+        
         // Bucle principal del juego
         function startGameLoop() {
-            setInterval(() => {
-                // Disminuir estadísticas con el tiempo (más lento que antes)
-                gameState.hunger = Math.max(0, gameState.hunger - 0.2);
-                gameState.happiness = Math.max(0, gameState.happiness - 0.1);
-                gameState.energy = Math.max(0, gameState.energy - 0.15);
-                gameState.cleanliness = Math.max(0, gameState.cleanliness - 0.1);
-                
-                // Actualizar temporizador de negligencia
-                updateNeglectTimer(gameState, 0.016); // ~1 minuto en el juego
-                
-                // Añadir un poco de XP por sobrevivir (más lento que antes)
-                if (gameState.hunger > 0 && gameState.happiness > 0) {
-                    gameState.xp += 0.2;
+            // Limpiar cualquier intervalo existente
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            
+            gameLoopInterval = setInterval(() => {
+                // Solo actualizar si no está muerto
+                if (!gameState.isDead) {
+                    // Disminuir estadísticas con el tiempo (más lento que antes)
+                    gameState.hunger = Math.max(0, gameState.hunger - 0.2);
+                    gameState.happiness = Math.max(0, gameState.happiness - 0.1);
+                    gameState.energy = Math.max(0, gameState.energy - 0.15);
+                    gameState.cleanliness = Math.max(0, gameState.cleanliness - 0.1);
+                    
+                    // Actualizar temporizador de negligencia
+                    updateNeglectTimer(gameState, 0.016); // ~1 minuto en el juego
+                    
+                    // Añadir un poco de XP por sobrevivir (más lento que antes)
+                    if (gameState.hunger > 0 && gameState.happiness > 0) {
+                        gameState.xp += 0.2;
+                    }
+                    
+                    // Calcular nivel basado en XP (más difícil subir de nivel)
+                    const newLevel = Math.floor(Math.sqrt(gameState.xp / 10)) + 1;
+                    if (newLevel > gameState.level) {
+                        gameState.level = newLevel;
+                        showNotification(`¡Subiste al nivel ${gameState.level}!`, 'warning');
+                    }
+                    
+                    // Verificar evolución
+                    checkEvolution();
+                    
+                    // Verificar si la mascota murió
+                    checkPetHealth();
+                    
+                    updateUI();
                 }
-                
-                // Calcular nivel basado en XP (más difícil subir de nivel)
-                const newLevel = Math.floor(Math.sqrt(gameState.xp / 10)) + 1;
-                if (newLevel > gameState.level) {
-                    gameState.level = newLevel;
-                    showNotification(`¡Subiste al nivel ${gameState.level}!`, 'warning');
-                }
-                
-                // Verificar evolución
-                checkEvolution();
-                
-                // Verificar si la mascota murió
-                checkPetHealth();
-                
-                updateUI();
-                saveGame();
             }, 3000);
         }
         
@@ -857,12 +982,81 @@
                 
                 eventButton.style.display = 'none';
                 updateUI();
+                saveGame();
             }
         }
         
         // Cerrar minijuego
         function closeMinigame() {
             minigameContainer.style.display = 'none';
+        }
+        
+        // Mostrar pantalla de muerte
+        function showDeathScreen() {
+            actionButtons.style.display = 'none';
+            deathScreen.style.display = 'block';
+            
+            if (gameState.deathReason === 'neglect') {
+                deathMessage.textContent = "Tu Telegotchi murió por falta de cuidado. ¡Debes estar más atento la próxima vez!";
+            } else {
+                deathMessage.textContent = "Tu Telegotchi ha muerto. ¡Cuida mejor al próximo!";
+            }
+            
+            // Deshabilitar botón de revivir si no hay suficiente dinero
+            reviveButton.disabled = gameState.money < 1000;
+        }
+        
+        // Ocultar pantalla de muerte
+        function hideDeathScreen() {
+            actionButtons.style.display = 'grid';
+            deathScreen.style.display = 'none';
+        }
+        
+        // Revivir mascota
+        function revivePet() {
+            if (gameState.money >= 1000) {
+                gameState.money -= 1000;
+                gameState.isDead = false;
+                gameState.hunger = 80;
+                gameState.happiness = 80;
+                gameState.energy = 80;
+                gameState.cleanliness = 80;
+                gameState.neglectTimer = {
+                    hunger: 0,
+                    happiness: 0,
+                    energy: 0,
+                    cleanliness: 0
+                };
+                
+                hideDeathScreen();
+                showNotification('¡Tu Telegotchi ha revivido! -$1000', 'warning');
+                updateUI();
+                saveGame();
+            }
+        }
+        
+        // Reiniciar juego
+        function resetGame() {
+            // Guardar el nombre personalizado si existe
+            const customName = gameState.customName ? gameState.petName : false;
+            
+            // Resetear estado del juego
+            gameState = {...defaultGameState};
+            
+            // Mantener el nombre personalizado si existía
+            if (customName) {
+                gameState.petName = customName;
+                gameState.customName = true;
+            }
+            
+            hideDeathScreen();
+            updateUI();
+            saveGame();
+            
+            // Reiniciar el bucle del juego
+            startGameLoop();
+            
+            showNotification('¡Has comenzado un nuevo juego!', 'warning');
         }
         
         // Actualizar la interfaz de usuario
@@ -873,6 +1067,7 @@
             energyBar.style.width = `${Math.floor(gameState.energy)}%`;
             cleanlinessBar.style.width = `${Math.floor(gameState.cleanliness)}%`;
             petLevel.textContent = gameState.level;
+            petName.textContent = gameState.petName;
             
             // Actualizar colores de las barras según los valores
             updateBarColor(hungerBar, gameState.hunger, '#ff9800');
@@ -881,11 +1076,12 @@
             updateBarColor(cleanlinessBar, gameState.cleanliness, '#9c27b0');
             
             // Deshabilitar botones según el estado
-            feedButton.disabled = gameState.money < 10 || gameState.hunger >= 100;
-            cleanButton.disabled = gameState.money < 5 || gameState.cleanliness >= 100;
-            workButton.disabled = gameState.workCooldown || gameState.energy <= 0;
-            playButton.disabled = gameState.energy <= 0;
-            sleepButton.disabled = gameState.sleepCooldown || gameState.energy >= 100;
+            feedButton.disabled = gameState.money < 10 || gameState.hunger >= 100 || gameState.isDead;
+            cleanButton.disabled = gameState.money < 5 || gameState.cleanliness >= 100 || gameState.isDead;
+            workButton.disabled = gameState.workCooldown || gameState.energy <= 0 || gameState.isDead;
+            playButton.disabled = gameState.energy <= 0 || gameState.isDead;
+            sleepButton.disabled = gameState.sleepCooldown || gameState.energy >= 100 || gameState.isDead;
+            shopButton.disabled = gameState.isDead;
             
             // Actualizar texto de botones
             workButton.textContent = gameState.workCooldown ? 'Descansando...' : 'Trabajar (+$15)';
@@ -896,6 +1092,18 @@
             
             // Actualizar colección
             updateCollectionDisplay();
+            
+            // Actualizar imagen de la mascota
+            updatePetImage();
+        }
+        
+        // Actualizar imagen de la mascota según su estado
+        function updatePetImage() {
+            if (gameState.isDead) {
+                petImage.textContent = '💀';
+            } else {
+                petImage.textContent = petStages[gameState.petStage].emoji;
+            }
         }
         
         // Actualizar color de una barra según su valor
@@ -911,6 +1119,8 @@
         
         // Actualizar display del temporizador de muerte
         function updateDeathTimerDisplay() {
+            if (gameState.isDead) return;
+            
             const maxNeglect = Math.max(
                 gameState.neglectTimer.hunger,
                 gameState.neglectTimer.happiness,
@@ -945,7 +1155,7 @@
         
         // Alimentar a la mascota
         function feedPet() {
-            if (gameState.money >= 10 && gameState.hunger < 100) {
+            if (gameState.money >= 10 && gameState.hunger < 100 && !gameState.isDead) {
                 gameState.money -= 10;
                 gameState.hunger = Math.min(100, gameState.hunger + 20);
                 gameState.xp += 5;
@@ -953,12 +1163,13 @@
                 gameState.neglectTimer.hunger = Math.max(0, gameState.neglectTimer.hunger - 10);
                 showNotification('¡Tu Telegotchi ha comido! +20 hambre, -5 limpieza');
                 updateUI();
+                saveGame();
             }
         }
         
         // Jugar con la mascota
         function playWithPet() {
-            if (gameState.energy > 0) {
+            if (gameState.energy > 0 && !gameState.isDead) {
                 gameState.happiness = Math.min(100, gameState.happiness + 15);
                 gameState.energy = Math.max(0, gameState.energy - 20);
                 gameState.xp += 10;
@@ -966,12 +1177,13 @@
                 gameState.neglectTimer.happiness = Math.max(0, gameState.neglectTimer.happiness - 10);
                 showNotification('¡Tu Telegotchi se divirtió jugando! +15 felicidad, -20 energía, -10 limpieza');
                 updateUI();
+                saveGame();
             }
         }
         
         // Trabajar para ganar dinero
         function work() {
-            if (!gameState.workCooldown && gameState.energy > 0) {
+            if (!gameState.workCooldown && gameState.energy > 0 && !gameState.isDead) {
                 gameState.money += 15;
                 gameState.happiness = Math.max(0, gameState.happiness - 5);
                 gameState.energy = Math.max(0, gameState.energy - 30);
@@ -980,18 +1192,20 @@
                 
                 showNotification('+$15 por trabajar. -5 felicidad, -30 energía');
                 updateUI();
+                saveGame();
                 
                 // Cooldown de trabajo
                 setTimeout(() => {
                     gameState.workCooldown = false;
                     updateUI();
+                    saveGame();
                 }, 10000);
             }
         }
         
         // Poner a dormir a la mascota
         function putToSleep() {
-            if (!gameState.sleepCooldown && gameState.energy < 100) {
+            if (!gameState.sleepCooldown && gameState.energy < 100 && !gameState.isDead) {
                 gameState.sleepCooldown = true;
                 sleepButton.textContent = 'Durmiendo...';
                 gameState.neglectTimer.energy = Math.max(0, gameState.neglectTimer.energy - 15);
@@ -1000,12 +1214,18 @@
                 const sleepInterval = setInterval(() => {
                     gameState.energy = Math.min(100, gameState.energy + 10);
                     updateUI();
+                    saveGame();
                     
-                    if (gameState.energy >= 100) {
+                    if (gameState.energy >= 100 || gameState.isDead) {
                         clearInterval(sleepInterval);
                         gameState.sleepCooldown = false;
-                        showNotification('¡Tu Telegotchi descansó bien! Energía al máximo');
+                        
+                        if (!gameState.isDead) {
+                            showNotification('¡Tu Telegotchi descansó bien! Energía al máximo');
+                        }
+                        
                         updateUI();
+                        saveGame();
                     }
                 }, 2000);
             }
@@ -1013,19 +1233,20 @@
         
         // Limpiar a la mascota
         function cleanPet() {
-            if (gameState.money >= 5 && gameState.cleanliness < 100) {
+            if (gameState.money >= 5 && gameState.cleanliness < 100 && !gameState.isDead) {
                 gameState.money -= 5;
                 gameState.cleanliness = Math.min(100, gameState.cleanliness + 30);
                 gameState.xp += 3;
                 gameState.neglectTimer.cleanliness = Math.max(0, gameState.neglectTimer.cleanliness - 10);
                 showNotification('¡Tu Telegotchi está limpio! +30 limpieza');
                 updateUI();
+                saveGame();
             }
         }
         
         // Comprar ítem de la tienda
         function buyItem(type, cost, value, sideEffects = {}) {
-            if (gameState.money >= cost) {
+            if (gameState.money >= cost && !gameState.isDead) {
                 gameState.money -= cost;
                 
                 switch (type) {
@@ -1066,29 +1287,32 @@
                 
                 showNotification(message);
                 updateUI();
+                saveGame();
             } else {
-                showNotification('No tienes suficiente dinero', 'error');
+                showNotification(gameState.isDead ? 'No puedes comprar mientras tu Telegotchi está muerto' : 'No tienes suficiente dinero', 'error');
             }
         }
         
         // Comprar coleccionable
         function buyCollectible(cost, id) {
-            if (gameState.money >= cost) {
+            if (gameState.money >= cost && !gameState.isDead) {
                 if (!gameState.collectedItems[id]) {
                     gameState.money -= cost;
                     gameState.collectedItems[id] = 1;
                     gameState.xp += 50;
                     showNotification('¡Coleccionable adquirido! +50 XP');
                     updateUI();
+                    saveGame();
                 } else {
                     gameState.money -= cost;
                     gameState.collectedItems[id]++;
                     gameState.xp += 20;
                     showNotification(`¡Otro ${collectibles.find(c => c.id === id).name} para tu colección! +20 XP`);
                     updateUI();
+                    saveGame();
                 }
             } else {
-                showNotification('No tienes suficiente dinero', 'error');
+                showNotification(gameState.isDead ? 'No puedes comprar mientras tu Telegotchi está muerto' : 'No tienes suficiente dinero', 'error');
             }
         }
         
@@ -1113,12 +1337,13 @@
                     // Verificar requisitos de nivel para la próxima etapa
                     if (gameState.level >= petStages[nextStage].minLevel) {
                         gameState.petStage = nextStage;
-                        gameState.petName = petStages[nextStage].name;
+                        gameState.petName = gameState.customName ? gameState.petName : petStages[nextStage].name;
                         
                         // Mostrar animación de evolución
                         showEvolutionAnimation(petStages[nextStage].emoji);
                         
                         showNotification(`¡Tu Telegotchi ha evolucionado a ${petStages[nextStage].name}!`, 'warning');
+                        saveGame();
                     }
                 }
             }
@@ -1128,9 +1353,11 @@
         function checkPetHealth() {
             // Verificar si alguna estadística está en 0
             if (gameState.hunger <= 0 || gameState.happiness <= 0 || gameState.energy <= 0 || gameState.cleanliness <= 0) {
-                petImage.textContent = '💀';
-                petName.textContent = 'RIP Telegotchi';
-                showNotification('¡Tu Telegotchi ha muerto! Recarga la página para empezar de nuevo.', 'error');
+                gameState.isDead = true;
+                gameState.deathReason = 'stats';
+                showDeathScreen();
+                showNotification('¡Tu Telegotchi ha muerto!', 'error');
+                saveGame();
                 return true;
             }
             
@@ -1143,9 +1370,11 @@
             );
             
             if (maxNeglect >= 30) {
-                petImage.textContent = '💀';
-                petName.textContent = 'RIP Telegotchi (Negligencia)';
-                showNotification('¡Tu Telegotchi murió por falta de cuidado! Recarga la página para empezar de nuevo.', 'error');
+                gameState.isDead = true;
+                gameState.deathReason = 'neglect';
+                showDeathScreen();
+                showNotification('¡Tu Telegotchi murió por falta de cuidado!', 'error');
+                saveGame();
                 return true;
             }
             
@@ -1212,6 +1441,25 @@
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
+        }
+        
+        // Actualizar temporizador de negligencia
+        function updateNeglectTimer(state, hoursElapsed) {
+            // Tiempo máximo de negligencia (30 horas)
+            const maxNeglect = 30;
+            
+            // Actualizar temporizadores para cada estadística
+            if (state.hunger <= 30) state.neglectTimer.hunger = Math.min(maxNeglect, state.neglectTimer.hunger + hoursElapsed);
+            else state.neglectTimer.hunger = Math.max(0, state.neglectTimer.hunger - hoursElapsed * 2);
+            
+            if (state.happiness <= 30) state.neglectTimer.happiness = Math.min(maxNeglect, state.neglectTimer.happiness + hoursElapsed);
+            else state.neglectTimer.happiness = Math.max(0, state.neglectTimer.happiness - hoursElapsed * 2);
+            
+            if (state.energy <= 30) state.neglectTimer.energy = Math.min(maxNeglect, state.neglectTimer.energy + hoursElapsed);
+            else state.neglectTimer.energy = Math.max(0, state.neglectTimer.energy - hoursElapsed * 2);
+            
+            if (state.cleanliness <= 30) state.neglectTimer.cleanliness = Math.min(maxNeglect, state.neglectTimer.cleanliness + hoursElapsed);
+            else state.neglectTimer.cleanliness = Math.max(0, state.neglectTimer.cleanliness - hoursElapsed * 2);
         }
         
         // Iniciar el juego cuando se cargue la página
