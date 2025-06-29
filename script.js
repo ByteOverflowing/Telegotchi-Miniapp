@@ -497,21 +497,21 @@ async function initApp() {
 
     // Configurar eventos de UI
     document.getElementById('feed-btn').addEventListener('click', async () => {
-        if (pet.feed()) {
+        if (pet && pet.feed()) {
             showMessage("🍔 Has alimentado a tu Tamagotchi!");
             await renderPet();
         }
     });
 
     document.getElementById('play-btn').addEventListener('click', async () => {
-        if (pet.play()) {
+        if (pet && pet.play()) {
             showMessage("⚽ Has jugado con tu Tamagotchi!");
             await renderPet();
         }
     });
 
     document.getElementById('sleep-btn').addEventListener('click', async () => {
-        if (pet.sleep()) {
+        if (pet && pet.sleep()) {
             const action = pet.isSleeping ? "dormido" : "despertado";
             showMessage(`🛌 Has ${action} a tu Tamagotchi!`);
             await renderPet();
@@ -519,14 +519,14 @@ async function initApp() {
     });
 
     document.getElementById('clean-btn').addEventListener('click', async () => {
-        if (pet.clean()) {
+        if (pet && pet.clean()) {
             showMessage("🚿 Has limpiado a tu Tamagotchi!");
             await renderPet();
         }
     });
 
     document.getElementById('revive-btn').addEventListener('click', async () => {
-        if (pet.revive()) {
+        if (pet && pet.revive()) {
             showMessage("💖 Has revivido a tu Tamagotchi!");
             await renderPet();
         }
@@ -545,7 +545,7 @@ async function initApp() {
         const petElement = document.getElementById('pet');
         petElement.classList.add('shake');
 
-        if (pet.isAlive) {
+        if (pet && pet.isAlive) {
             const earned = pet.tap();
             if (earned) {
                 showMessage("+$2 por jugar con tu mascota!");
@@ -562,6 +562,8 @@ async function initApp() {
 
     document.querySelectorAll('.item').forEach(item => {
         item.addEventListener('click', async () => {
+            if (!pet) return;
+            
             const cost = parseInt(item.dataset.cost);
             const itemData = {
                 cost: cost,
