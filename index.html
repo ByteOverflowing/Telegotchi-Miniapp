@@ -1183,6 +1183,8 @@
             if (gameState.money >= 1000) {
                 gameState.money -= 1000;
                 gameState.isDead = false;
+                // Actualizar imagen de la mascota
+                updatePetImage();
                 gameState.hunger = 80;
                 gameState.happiness = 80;
                 gameState.energy = 80;
@@ -1258,9 +1260,6 @@
             
             // Actualizar colección
             updateCollectionDisplay();
-            
-            // Actualizar imagen de la mascota
-            updatePetImage();
         }
         
         // Actualizar imagen de la mascota según su estado
@@ -1522,6 +1521,8 @@
             // Verificar si alguna estadística está en 0
             if (gameState.hunger <= 0 || gameState.happiness <= 0 || gameState.energy <= 0 || gameState.cleanliness <= 0) {
                 gameState.isDead = true;
+                // Actualizar imagen de la mascota
+                updatePetImage();
                 gameState.deathReason = 'stats';
                 showDeathScreen();
                 showNotification('¡Tu Telegotchi ha muerto!', 'error');
@@ -1539,6 +1540,8 @@
             
             if (maxNeglect >= 30) {
                 gameState.isDead = true;
+                // Actualizar imagen de la mascota
+                updatePetImage();
                 gameState.deathReason = 'neglect';
                 showDeathScreen();
                 showNotification('¡Tu Telegotchi murió por falta de cuidado!', 'error');
