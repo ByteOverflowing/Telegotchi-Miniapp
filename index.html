@@ -766,6 +766,15 @@
             const savedGame = localStorage.getItem('telegotchiGame');
             if (savedGame) {
                 const parsedGame = JSON.parse(savedGame);
+        // Resetear workCooldown si el tiempo de cooldown ya pasó
+        if (parsedGame.workCooldown) {
+            const now = Date.now();
+            const cooldownEnd = parsedGame.lastUpdate + 10000; // 10 segundos de cooldown
+            if (now > cooldownEnd) {
+                parsedGame.workCooldown = false;
+            }
+        }
+        
                 
                 // Calcular el tiempo transcurrido desde la última actualización
                 const now = Date.now();
@@ -1184,29 +1193,28 @@
                 saveGame();
             }
         }
-        
+        function work(){
         // Trabajar para ganar dinero
-        function work() {
-            if (!gameState.workCooldown && gameState.energy > 0 && !gameState.isDead) {
-                gameState.money += 15;
-                gameState.happiness = Math.max(0, gameState.happiness - 5);
-                gameState.energy = Math.max(0, gameState.energy - 30);
-                gameState.workCooldown = true;
-                gameState.neglectTimer.energy = Math.max(0, gameState.neglectTimer.energy - 5);
-                
-                showNotification('+$15 por trabajar. -5 felicidad, -30 energía');
-                updateUI();
-                saveGame();
-                
-                // Cooldown de trabajo
-                setTimeout(() => {
-                    gameState.workCooldown = false;
-                    updateUI();
-                    saveGame();
-                }, 10000);
-            }
-        }
+         if (!gameState.workCooldown && gameState.energy > 0 && !gameState.isDead) {
+        gameState.money += 15;
+        gameState.happiness = Math.max(0, gameState.happiness - 5);
+        gameState.energy = Math.max(0, gameState.energy - 30);
+        gameState.workCooldown = true;
+        gameState.neglectTimer.energy = Math.max(0, gameState.neglectTimer.energy - 5);
+        gameState.lastUpdate = Date.now(); // Actualizar timestamp
         
+        showNotification('+$15 por trabajar. -5 felicidad, -30 energía');
+        updateUI();
+        saveGame();
+        
+        // Cooldown de trabajo
+        setTimeout(() => {
+            gameState.workCooldown = false;
+            updateUI();
+            saveGame();
+        }, 10000);
+    }
+        }
         // Poner a dormir a la mascota
         function putToSleep() {
             if (!gameState.sleepCooldown && gameState.energy < 100 && !gameState.isDead) {
