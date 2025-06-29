@@ -1265,10 +1265,14 @@
         
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
+            console.log(Telegram)
             if(window.Telegram?.WebApp?.initDataUnsafe?.user){
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
                 drawUniqueCreature("creatureCanvas", userId, gameState.level, !gameState.isDead);
+            }
+            else{
+                drawUniqueCreature("creatureCanvas", Math.floor(Math.random()*999999999999), gameState.level, !gameState.isDead);
             }
         }
         
@@ -1551,12 +1555,18 @@
             const evolutionDiv = document.createElement('div');
             evolutionDiv.className = 'pet-evolution';
             evolutionDiv.innerHTML = `
-                <div class="pet-image">${newEmoji}</div>
+                <div class="pet-image"><canvas id="evo-animation"></div>
                 <h2>¡Evolucionando!</h2>
                 <p>${gameState.petName}</p>
             `;
             
             petContainer.appendChild(evolutionDiv);
+
+            if(window.Telegram?.WebApp?.initDataUnsafe?.user){
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                const userId = user.id;
+                drawUniqueCreature("evo-animation",userId,gameState.level,!gameState.isDead)
+            }
             
             // Eliminar la animación después de 3 segundos
             setTimeout(() => {
