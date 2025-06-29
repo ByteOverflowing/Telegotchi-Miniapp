@@ -154,7 +154,7 @@ class Tamagotchi {
                     date: new Date()
                 });
             }
-            this.update(); // Añadir esta línea
+            this.update();
             return true;
         }
         return false;
@@ -163,7 +163,7 @@ class Tamagotchi {
     calculateRecoveryTime() {
         if (this.isSleeping) {
             const missingEnergy = 100 - this.energy;
-            const minutes = Math.ceil(missingEnergy / 2); // 2% por minuto
+            const minutes = Math.ceil(missingEnergy / 2);
             return minutes;
         }
         return 0;
@@ -232,10 +232,23 @@ async function savePetData() {
 
     const data = JSON.stringify(pet);
     try {
-        if (window.Telegram?.WebApp?.CloudStorage) {
-            await Telegram.WebApp.CloudStorage.setItem('tamagotchi', data);
-        }
+        // Guardar en localStorage como respaldo
         localStorage.setItem('tamagotchi', data);
+        
+        // Guardar en CloudStorage de Telegram si está disponible
+        if (window.Telegram?.WebApp?.CloudStorage) {
+            await new Promise((resolve, reject) => {
+                Telegram.WebApp.CloudStorage.setItem('tamagotchi', data, (err) => {
+                    if (err) {
+                        console.error("Error saving to CloudStorage:", err);
+                        reject(err);
+                    } else {
+                        console.log("Data saved to CloudStorage");
+                        resolve();
+                    }
+                });
+            });
+        }
     } catch (e) {
         console.error("Error saving data:", e);
     }
@@ -243,20 +256,31 @@ async function savePetData() {
 
 async function loadPetData() {
     try {
+        // Primero intentar cargar de CloudStorage
         if (window.Telegram?.WebApp?.CloudStorage) {
-            return new Promise((resolve) => {
+            const cloudData = await new Promise((resolve) => {
                 Telegram.WebApp.CloudStorage.getItem('tamagotchi', (err, value) => {
-                    if (!err && value) {
-                        resolve(JSON.parse(value));
+                    if (err || !value) {
+                        console.log("No data in CloudStorage or error:", err);
+                        resolve(null);
                     } else {
-                        const localData = localStorage.getItem('tamagotchi');
-                        resolve(localData ? JSON.parse(localData) : null);
+                        console.log("Data loaded from CloudStorage");
+                        resolve(value);
                     }
                 });
             });
+            
+            if (cloudData) return JSON.parse(cloudData);
         }
+
+        // Si no hay datos en CloudStorage, cargar de localStorage
         const localData = localStorage.getItem('tamagotchi');
-        return localData ? JSON.parse(localData) : null;
+        if (localData) {
+            console.log("Data loaded from localStorage");
+            return JSON.parse(localData);
+        }
+
+        return null;
     } catch (e) {
         console.error("Error loading data:", e);
         return null;
@@ -355,23 +379,19 @@ function updateTapInfo() {
 async function renderPet() {
     if (!pet) return;
 
-    // Actualizar primero el modelo
     pet.update();
 
-    // Actualizar TODOS los elementos de la UI
     document.getElementById('money').textContent = pet.money;
     document.getElementById('hunger-value').textContent = Math.round(pet.hunger);
     document.getElementById('happiness-value').textContent = Math.round(pet.happiness);
     document.getElementById('energy-value').textContent = Math.round(pet.energy);
     document.getElementById('cleanliness-value').textContent = Math.round(pet.cleanliness);
 
-    // Actualizar barras visuales
     updateBar('hunger', pet.hunger);
     updateBar('happiness', pet.happiness);
     updateBar('energy', pet.energy);
     updateBar('cleanliness', pet.cleanliness);
 
-    // Resto de actualizaciones...
     document.getElementById('pet-name').textContent = pet.name;
     document.getElementById('pet-state').textContent = getStateText(pet.state);
     document.getElementById('pet-state').className = `state ${pet.state}`;
@@ -403,7 +423,6 @@ async function renderPet() {
 
     document.getElementById('sleep-btn').textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
 
-    // Guardar los cambios
     await savePetData();
 }
 
@@ -414,29 +433,27 @@ function startWork() {
     document.getElementById('work-earned').textContent = '0';
     document.getElementById('work-bar').style.width = '0%';
 
-    // Configurar evento de clic
     document.getElementById('work-click-area').onclick = async () => {
-        // CORRECCIÓN: Modificar el dinero directamente
         pet.money += 2;
         workEarnings += 2;
         document.getElementById('work-earned').textContent = workEarnings;
+        document.getElementById('money').textContent = pet.money;
         
         workProgress = Math.min(100, workProgress + 15);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
         
         if (workProgress >= 100) {
-            pet.money += 5; // Bonus directo
+            pet.money += 5;
             workEarnings += 5;
             document.getElementById('work-earned').textContent = workEarnings;
+            document.getElementById('money').textContent = pet.money;
             workProgress = 0;
             document.getElementById('work-bar').style.width = '0%';
         }
         
-        // CORRECCIÓN: Actualizar UI inmediatamente
-        document.getElementById('money').textContent = pet.money;
+        await savePetData();
     };
     
-    // Configurar pérdida progresiva
     workInterval = setInterval(() => {
         workProgress = Math.max(0, workProgress - 1);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
@@ -446,22 +463,26 @@ function startWork() {
 async function stopWork() {
     clearInterval(workInterval);
     document.getElementById('work-minigame').classList.add('hidden');
-    await renderPet(); // Actualizar UI completa
+    await renderPet();
     showMessage(`¡Ganaste $${workEarnings}!`);
 }
 
 async function initApp() {
-    tg = window.Telegram.WebApp;
+    tg = window.Telegram?.WebApp;
     if (tg) {
         tg.expand();
         tg.enableClosingConfirmation();
-    }
+        
+        // Configurar manejadores de eventos para guardar datos al cerrar
+        tg.onEvent('viewportChanged', (event) => {
+            if (event.isStateStable) {
+                savePetData();
+            }
+        });
 
-    // Migrar datos antiguos
-    const oldLocalData = localStorage.getItem('tamagotchi');
-    if (oldLocalData && !await loadPetData()) {
-        await savePetData(JSON.parse(oldLocalData));
-        localStorage.removeItem('tamagotchi');
+        tg.onEvent('closed', () => {
+            savePetData();
+        });
     }
 
     const savedPet = await loadPetData();
@@ -469,12 +490,12 @@ async function initApp() {
     if (savedPet) {
         pet = Tamagotchi.fromJSON(savedPet);
         pet.update();
-        renderPet();
+        await renderPet();
     } else {
         showInitForm();
     }
 
-    // Configurar eventos
+    // Configurar eventos de UI
     document.getElementById('feed-btn').addEventListener('click', async () => {
         if (pet.feed()) {
             showMessage("🍔 Has alimentado a tu Tamagotchi!");
@@ -528,7 +549,7 @@ async function initApp() {
             const earned = pet.tap();
             if (earned) {
                 showMessage("+$2 por jugar con tu mascota!");
-                await renderPet(); // Forzar actualización
+                await renderPet();
             } else {
                 showMessage("Límite diario alcanzado (5 toques/día)");
             }
@@ -551,9 +572,8 @@ async function initApp() {
             };
             
             if (pet.buyItem(itemData)) {
-                // CORRECCIÓN: Actualizar dinero inmediatamente
                 document.getElementById('money').textContent = pet.money;
-                await renderPet(); // Actualizar el resto de la UI
+                await renderPet();
                 showMessage(`¡Compra realizada! ${item.textContent.trim()}`);
             } else {
                 showMessage("No tienes suficiente dinero");
@@ -561,10 +581,13 @@ async function initApp() {
         });
     });
 
+    // Guardar automáticamente cada 30 segundos
+    setInterval(savePetData, 30000);
+
     // Generar dinero pasivo
     setInterval(async () => {
         if (pet?.collectMoney()) {
-            await renderPet(); // Actualizar UI después de ganar dinero
+            await renderPet();
             showMessage("¡Has ganado $5 por tiempo jugado!");
         }
     }, 60000);
