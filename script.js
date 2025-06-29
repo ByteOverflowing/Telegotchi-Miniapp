@@ -22,7 +22,7 @@ class Tamagotchi {
 
     update() {
         const now = new Date();
-        const hoursPassed = (now - this.lastUpdate) / (1000 * 60 * 60);
+        const hours = (now - this.lastUpdate) / 3600000;
 
         if (now.toDateString() !== this.lastTapDate) {
             this.tapsToday = 0;
@@ -30,39 +30,29 @@ class Tamagotchi {
         }
 
         if (this.isAlive) {
-            if (!this.isSleeping) {
-                this.hunger = Math.min(100, Math.max(0, this.hunger + hoursPassed * 5));
-                this.happiness = Math.min(100, Math.max(0, this.happiness - hoursPassed * 3));
-                this.cleanliness = Math.min(100, Math.max(0, this.cleanliness - hoursPassed * 2));
-                this.energy = Math.min(100, Math.max(0, this.energy - hoursPassed * 4));
+            if (this.isSleeping) {
+                this.energy = Math.min(100, this.energy + hours * 10);
+                this.hunger = Math.min(100, this.hunger + hours * 2);
             } else {
-                this.energy = Math.min(100, Math.max(0, this.energy + hoursPassed * 10));
-                this.hunger = Math.min(100, Math.max(0, this.hunger + hoursPassed * 2));
+                this.hunger = Math.min(100, this.hunger + hours * 5);
+                this.happiness = Math.max(0, this.happiness - hours * 3);
+                this.cleanliness = Math.max(0, this.cleanliness - hours * 2);
+                this.energy = Math.max(0, this.energy - hours * 4);
             }
 
             this.age = (now - this.birthDate) / (1000 * 60 * 60 * 24);
-
-            if (this.age >= 3 && this.stage === "egg") {
-                this.stage = "baby";
-            } else if (this.age >= 7 && this.stage === "baby") {
-                this.stage = "adult";
-            }
+            if (this.stage === "egg" && this.age >= 3) this.stage = "baby";
+            else if (this.stage === "baby" && this.age >= 7) this.stage = "adult";
 
             if (this.hunger >= 100 || this.happiness <= 0 || this.energy <= 0) {
                 this.isAlive = false;
                 this.state = "dead";
             } else {
-                if (this.isSleeping) {
-                    this.state = "sleepy";
-                } else if (this.hunger > 70) {
-                    this.state = "hungry";
-                } else if (this.happiness < 30) {
-                    this.state = "sad";
-                } else if (this.cleanliness < 20) {
-                    this.state = "dirty";
-                } else {
-                    this.state = "happy";
-                }
+                if (this.isSleeping) this.state = "sleepy";
+                else if (this.hunger > 70) this.state = "hungry";
+                else if (this.happiness < 30) this.state = "sad";
+                else if (this.cleanliness < 20) this.state = "dirty";
+                else this.state = "happy";
             }
         }
 
@@ -72,7 +62,7 @@ class Tamagotchi {
     feed(amount = 30) {
         if (!this.isAlive) return false;
         this.hunger = Math.max(0, this.hunger - amount);
-        this.weight = Math.min(20, this.weight + (amount / 10));
+        this.weight = Math.min(20, this.weight + amount / 10);
         return true;
     }
 
@@ -100,10 +90,7 @@ class Tamagotchi {
     revive() {
         if (this.isAlive) return false;
         this.isAlive = true;
-        this.hunger = 50;
-        this.happiness = 50;
-        this.energy = 50;
-        this.cleanliness = 50;
+        this.hunger = this.happiness = this.energy = this.cleanliness = 50;
         this.state = "happy";
         this.isSleeping = false;
         return true;
@@ -111,9 +98,9 @@ class Tamagotchi {
 
     collectMoney() {
         const now = new Date();
-        const hoursPassed = (now - this.lastEnergyRecovery) / (1000 * 60 * 60);
-        if (hoursPassed >= 1) {
-            this.money += Math.floor(hoursPassed) * 5;
+        const hours = (now - this.lastEnergyRecovery) / 3600000;
+        if (hours >= 1) {
+            this.money += Math.floor(hours) * 5;
             this.lastEnergyRecovery = now;
             return true;
         }
@@ -130,45 +117,32 @@ class Tamagotchi {
     }
 
     buyItem(item) {
-        if (this.money >= item.cost) {
-            this.money -= item.cost;
+        if (this.money < item.cost) return false;
+        this.money -= item.cost;
 
-            if (item.type === 'food') {
-                this.feed(item.hunger || 20);
-            } else if (item.type === 'toy') {
-                this.happiness = Math.min(100, this.happiness + (item.happiness || 20));
-            } else if (item.type === 'collectible') {
-                this.inventory.push({
-                    name: item.name || 'Item',
-                    type: 'collectible',
-                    date: new Date()
-                });
-            }
-            return true;
+        if (item.type === "food") this.feed(item.hunger || 20);
+        else if (item.type === "toy") this.happiness = Math.min(100, this.happiness + (item.happiness || 20));
+        else if (item.type === "collectible") {
+            this.inventory.push({ name: item.name || "Item", type: "collectible", date: new Date() });
         }
-        return false;
+        return true;
     }
 
     calculateRecoveryTime() {
-        if (this.isSleeping) {
-            const missingEnergy = 100 - this.energy;
-            const minutes = Math.ceil(missingEnergy / 2);
-            return minutes;
-        }
-        return 0;
+        if (!this.isSleeping) return 0;
+        return Math.ceil((100 - this.energy) / 2);
     }
 
     work() {
-        const earnings = 2;
-        this.money += earnings;
-        return earnings;
+        this.money += 2;
+        return 2;
     }
 
     toJSON() {
         return {
             name: this.name,
-            birthDate: this.birthDate.getTime(),
-            lastUpdate: this.lastUpdate.getTime(),
+            birthDate: +this.birthDate,
+            lastUpdate: +this.lastUpdate,
             hunger: this.hunger,
             happiness: this.happiness,
             energy: this.energy,
@@ -181,9 +155,9 @@ class Tamagotchi {
             isAlive: this.isAlive,
             money: this.money,
             inventory: this.inventory,
-            lastEnergyRecovery: this.lastEnergyRecovery.getTime(),
+            lastEnergyRecovery: +this.lastEnergyRecovery,
             tapsToday: this.tapsToday,
-            lastTapDate: this.lastTapDate
+            lastTapDate: this.lastTapDate,
         };
     }
 
@@ -201,349 +175,243 @@ class Tamagotchi {
         pet.weight = json.weight;
         pet.stage = json.stage;
         pet.isAlive = json.isAlive;
-        pet.money = json.money || 100;
-        pet.inventory = json.inventory || [];
-        pet.lastEnergyRecovery = new Date(json.lastEnergyRecovery || Date.now());
-        pet.tapsToday = json.tapsToday || 0;
-        pet.lastTapDate = json.lastTapDate || new Date().toDateString();
+        pet.money = json.money;
+        pet.inventory = json.inventory;
+        pet.lastEnergyRecovery = new Date(json.lastEnergyRecovery);
+        pet.tapsToday = json.tapsToday;
+        pet.lastTapDate = json.lastTapDate;
         return pet;
     }
 }
 
-let pet = null;
-let tg = null;
-let workInterval = null;
-let workEarnings = 0;
-let workProgress = 0;
+// Variables globales
+let pet = null, tg = null, workInterval = null, workEarnings = 0, workProgress = 0;
 
+// Guardado / carga
 async function savePetData() {
     if (!pet) return;
-
     const data = JSON.stringify(pet);
-    try {
-        if (window.Telegram?.WebApp?.CloudStorage) {
-            await Telegram.WebApp.CloudStorage.setItem('tamagotchi', data);
+    localStorage.setItem("tamagotchi", data);
+    if (window.Telegram?.WebApp?.CloudStorage) {
+        try {
+            await Telegram.WebApp.CloudStorage.setItem("tamagotchi", data);
+        } catch (e) {
+            console.error("CloudStorage error:", e);
         }
-        localStorage.setItem('tamagotchi', data);
-    } catch (e) {
-        console.error("Error saving data:", e);
     }
 }
 
 async function loadPetData() {
-    try {
-        if (window.Telegram?.WebApp?.CloudStorage) {
-            return new Promise((resolve) => {
-                Telegram.WebApp.CloudStorage.getItem('tamagotchi', (err, value) => {
-                    if (!err && value) {
-                        resolve(JSON.parse(value));
-                    } else {
-                        const localData = localStorage.getItem('tamagotchi');
-                        resolve(localData ? JSON.parse(localData) : null);
-                    }
-                });
-            });
+    let json = localStorage.getItem("tamagotchi");
+    if (window.Telegram?.WebApp?.CloudStorage) {
+        try {
+            json = await new Promise(resolve => Telegram.WebApp.CloudStorage.getItem("tamagotchi", (_, v) => resolve(v || json)));
+        } catch (e) {
+            console.error("CloudStorage load error:", e);
         }
-        const localData = localStorage.getItem('tamagotchi');
-        return localData ? JSON.parse(localData) : null;
-    } catch (e) {
-        console.error("Error loading data:", e);
-        return null;
     }
+    return json ? JSON.parse(json) : null;
 }
 
-function showInitForm() {
-    document.getElementById('init-form').classList.remove('hidden');
-    document.querySelector('.pet-container').classList.add('hidden');
-    document.querySelector('.stats').classList.add('hidden');
-    document.querySelector('.info').classList.add('hidden');
-    document.querySelector('.actions').classList.add('hidden');
-    document.getElementById('shop').classList.add('hidden');
-    document.getElementById('work-minigame').classList.add('hidden');
-}
-
-async function createPet() {
-    const nameInput = document.getElementById('pet-name-input');
-    const name = nameInput.value.trim() || "Tammy";
-
-    pet = new Tamagotchi(name);
-    await savePetData();
-
-    document.getElementById('init-form').classList.add('hidden');
-    document.querySelector('.pet-container').classList.remove('hidden');
-    document.querySelector('.stats').classList.remove('hidden');
-    document.querySelector('.info').classList.remove('hidden');
-    document.querySelector('.actions').classList.remove('hidden');
-
-    await renderPet();
-}
-
+// Inyección de UI
 function updateBar(id, value) {
     const bar = document.getElementById(`${id}-bar`);
     const text = document.getElementById(`${id}-value`);
-
     bar.style.width = `${value}%`;
-    text.textContent = `${Math.round(value)}%`;
-
-    if (value > 70) {
-        bar.style.backgroundColor = value === 100 ? '#f44336' : '#ff9800';
-    } else if (value < 30) {
-        bar.style.backgroundColor = '#f44336';
-    } else {
-        bar.style.backgroundColor = '#4caf50';
-    }
+    bar.textContent = `${Math.round(value)}%`;
+    bar.style.backgroundColor = value > 70 ? "#4caf50" : (value < 30 ? "#f44336" : "#ff9800");
 }
 
-function getStateText(state) {
-    const states = {
-        happy: '😊 Feliz',
-        hungry: '🍔 Hambriento',
-        sad: '😢 Triste',
-        sleepy: '😴 Durmiendo',
-        dirty: '💩 Sucio',
-        dead: '💀 Muerto'
-    };
-    return states[state] || state;
+function getStateText(s) {
+    return { happy: "😊 Feliz", hungry: "🍔 Hambriento", sad: "😢 Triste", sleepy: "😴 Durmiendo", dirty: "💩 Sucio", dead: "💀 Muerto" }[s] || s;
 }
 
-function getStageText(stage) {
-    const stages = {
-        egg: 'Huevo',
-        baby: 'Bebé',
-        adult: 'Adulto'
-    };
-    return stages[stage] || stage;
+function getStageText(s) {
+    return { egg: "Huevo", baby: "Bebé", adult: "Adulto" }[s] || s;
 }
 
 function showMessage(text) {
-    if (window.Telegram?.WebApp?.showAlert) {
-        Telegram.WebApp.showAlert(text);
-    } else {
-        alert(text);
-    }
+    (window.Telegram?.WebApp?.showAlert && Telegram.WebApp.showAlert(text)) || alert(text);
 }
 
-function updateRecoveryTime() {
-    if (pet?.isSleeping) {
-        const minutes = pet.calculateRecoveryTime();
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        document.getElementById('recovery-time').textContent = `${hours}h ${mins}m`;
-    } else if (pet) {
-        document.getElementById('recovery-time').textContent = "No está durmiendo";
-    }
-}
-
-function updateTapInfo() {
-    if (pet) {
-        document.getElementById('tap-value').textContent = '2';
-        document.getElementById('taps-left').textContent = (5 - pet.tapsToday).toString();
-    }
-}
-
+// Renderea estado UI
 async function renderPet() {
     if (!pet) return;
-
     pet.update();
     await savePetData();
 
-    // Actualizar toda la UI
-    document.getElementById('money').textContent = pet.money;
-    document.getElementById('hunger-value').textContent = Math.round(pet.hunger);
-    document.getElementById('happiness-value').textContent = Math.round(pet.happiness);
-    document.getElementById('energy-value').textContent = Math.round(pet.energy);
-    document.getElementById('cleanliness-value').textContent = Math.round(pet.cleanliness);
-    
-    updateBar('hunger', pet.hunger);
-    updateBar('happiness', pet.happiness);
-    updateBar('energy', pet.energy);
-    updateBar('cleanliness', pet.cleanliness);
+    document.getElementById("money").textContent = pet.money;
+    updateBar("hunger", pet.hunger);
+    updateBar("happiness", pet.happiness);
+    updateBar("energy", pet.energy);
+    updateBar("cleanliness", pet.cleanliness);
 
-    document.getElementById('pet-name').textContent = pet.name;
-    document.getElementById('pet-state').textContent = getStateText(pet.state);
-    document.getElementById('pet-state').className = `state ${pet.state}`;
-    
-    document.getElementById('info-name').textContent = pet.name;
-    document.getElementById('info-age').textContent = pet.age.toFixed(1);
-    document.getElementById('info-weight').textContent = pet.weight;
-    document.getElementById('info-state').textContent = getStageText(pet.stage);
-    document.getElementById('inventory-count').textContent = pet.inventory.length;
-    
-    updateRecoveryTime();
-    updateTapInfo();
-    
-    const petElement = document.getElementById('pet');
-    petElement.className = 'pet';
-    
-    if (!pet.isAlive) {
-        petElement.classList.add('dead-pet');
-        document.getElementById('revive-btn').classList.remove('hidden');
-    } else {
-        petElement.classList.add(pet.stage);
-        
-        if (pet.state === 'happy') {
-            petElement.classList.add('happy-animation');
-        } else if (pet.state === 'sad') {
-            petElement.classList.add('sad-animation');
-        }
+    document.getElementById("pet-name").textContent = pet.name;
+    document.getElementById("pet-state").textContent = getStateText(pet.state);
+    document.getElementById("pet-state").className = `state ${pet.state}`;
+    document.getElementById("info-age").textContent = pet.age.toFixed(1);
+    document.getElementById("info-weight").textContent = pet.weight;
+    document.getElementById("info-state").textContent = getStageText(pet.stage);
+    document.getElementById("inventory-count").textContent = pet.inventory.length;
+
+    document.getElementById("recovery-time").textContent = pet.isSleeping
+        ? `${Math.floor(pet.calculateRecoveryTime()/60)}h ${pet.calculateRecoveryTime()%60}m`
+        : "No está durmiendo";
+    document.getElementById("taps-left").textContent = Math.max(0, 5 - pet.tapsToday);
+
+    const el = document.getElementById("pet");
+    el.className = `pet ${pet.isAlive ? pet.stage : "dead-pet"}`;
+    if (pet.isAlive && !pet.isSleeping) {
+        el.classList.add(pet.state === "happy" ? "happy-animation" : pet.state === "sad" ? "sad-animation" : "");
     }
-    
-    document.getElementById('sleep-btn').textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
+    document.getElementById("sleep-btn").textContent = pet.isSleeping ? "⏰ Despertar" : "🛌 Dormir";
+    document.getElementById("revive-btn").classList.toggle("hidden", pet.isAlive);
 }
 
+// Minijuego de trabajo
 function startWork() {
-    document.getElementById('work-minigame').classList.remove('hidden');
+    document.getElementById("work-minigame").classList.remove("hidden");
     workEarnings = 0;
     workProgress = 0;
-    document.getElementById('work-earned').textContent = '0';
-    document.getElementById('work-bar').style.width = '0%';
+    document.getElementById("work-earned").textContent = "0";
+    document.getElementById("work-bar").style.width = "0%";
 
-    document.getElementById('work-click-area').onclick = async () => {
+    const area = document.getElementById("work-click-area");
+    area.onclick = async () => {
         pet.money += 2;
         workEarnings += 2;
-        document.getElementById('work-earned').textContent = workEarnings;
-        document.getElementById('money').textContent = pet.money;
-        
+        document.getElementById("work-earned").textContent = workEarnings;
         workProgress = Math.min(100, workProgress + 15);
-        document.getElementById('work-bar').style.width = `${workProgress}%`;
-        
+        document.getElementById("work-bar").style.width = `${workProgress}%`;
+
         if (workProgress >= 100) {
             pet.money += 5;
             workEarnings += 5;
-            document.getElementById('work-earned').textContent = workEarnings;
-            document.getElementById('money').textContent = pet.money;
+            document.getElementById("work-earned").textContent = workEarnings;
             workProgress = 0;
-            document.getElementById('work-bar').style.width = '0%';
+            document.getElementById("work-bar").style.width = "0%";
         }
-        
+
         await savePetData();
+        document.getElementById("money").textContent = pet.money;
     };
 
     workInterval = setInterval(() => {
         workProgress = Math.max(0, workProgress - 1);
-        document.getElementById('work-bar').style.width = `${workProgress}%`;
+        document.getElementById("work-bar").style.width = `${workProgress}%`;
     }, 200);
 }
 
 async function stopWork() {
     clearInterval(workInterval);
-    document.getElementById('work-minigame').classList.add('hidden');
+    document.getElementById("work-minigame").classList.add("hidden");
     await renderPet();
     showMessage(`¡Ganaste $${workEarnings}!`);
 }
 
+// Inicialización
 async function initApp() {
-    tg = window.Telegram.WebApp;
+    tg = window.Telegram?.WebApp;
     if (tg) {
         tg.expand();
         tg.enableClosingConfirmation();
     }
 
-    const savedPet = await loadPetData();
-    if (savedPet) {
-        pet = Tamagotchi.fromJSON(savedPet);
+    const saved = await loadPetData();
+    pet = saved ? Tamagotchi.fromJSON(saved) : null;
+
+    if (pet) {
         await renderPet();
     } else {
-        showInitForm();
+        document.getElementById("init-form").classList.remove("hidden");
+        document.querySelector(".pet-container").classList.add("hidden");
     }
 
-    // Configurar eventos de botones
-    document.getElementById('feed-btn').addEventListener('click', async () => {
-        if (pet.feed()) {
+    // Listeners
+    document.getElementById("create-btn").addEventListener("click", async () => {
+        const name = document.getElementById("pet-name-input").value.trim() || "Tammy";
+        pet = new Tamagotchi(name);
+        await savePetData();
+        document.getElementById("init-form").classList.add("hidden");
+        document.querySelector(".pet-container").classList.remove("hidden");
+        await renderPet();
+    });
+
+    document.getElementById("feed-btn").addEventListener("click", async () => {
+        if (pet?.feed()) {
             await renderPet();
             showMessage("🍔 Has alimentado a tu Tamagotchi!");
         }
     });
 
-    document.getElementById('play-btn').addEventListener('click', async () => {
-        if (pet.play()) {
+    document.getElementById("play-btn").addEventListener("click", async () => {
+        if (pet?.play()) {
             await renderPet();
             showMessage("⚽ Has jugado con tu Tamagotchi!");
         }
     });
 
-    document.getElementById('sleep-btn').addEventListener('click', async () => {
-        if (pet.sleep()) {
-            const action = pet.isSleeping ? "dormido" : "despertado";
+    document.getElementById("sleep-btn").addEventListener("click", async () => {
+        if (pet?.sleep()) {
             await renderPet();
-            showMessage(`🛌 Has ${action} a tu Tamagotchi!`);
+            showMessage(pet.isSleeping ? "🛌 Ahora está durmiendo" : "⏰ Se despertó");
         }
     });
 
-    document.getElementById('clean-btn').addEventListener('click', async () => {
-        if (pet.clean()) {
+    document.getElementById("clean-btn").addEventListener("click", async () => {
+        if (pet?.clean()) {
             await renderPet();
-            showMessage("🚿 Has limpiado a tu Tamagotchi!");
+            showMessage("🚿 Limpieza completa!");
         }
     });
 
-    document.getElementById('revive-btn').addEventListener('click', async () => {
-        if (pet.revive()) {
+    document.getElementById("revive-btn").addEventListener("click", async () => {
+        if (pet?.revive()) {
             await renderPet();
-            showMessage("💖 Has revivido a tu Tamagotchi!");
+            showMessage("💖 Revivido!");
         }
     });
 
-    document.getElementById('shop-btn').addEventListener('click', () => {
-        document.getElementById('shop').classList.toggle('hidden');
+    document.getElementById("shop-btn").addEventListener("click", () => {
+        document.getElementById("shop").classList.toggle("hidden");
     });
 
-    document.getElementById('work-btn').addEventListener('click', startWork);
-    document.getElementById('work-stop').addEventListener('click', stopWork);
+    document.getElementById("work-btn").addEventListener("click", startWork);
+    document.getElementById("work-stop").addEventListener("click", stopWork);
 
-    document.getElementById('create-btn').addEventListener('click', createPet);
-
-    document.getElementById('pet-container').addEventListener('click', async () => {
-        const petElement = document.getElementById('pet');
-        petElement.classList.add('shake');
-
-        if (pet.isAlive) {
-            const earned = pet.tap();
-            if (earned) {
-                await renderPet();
-                showMessage("+$2 por jugar con tu mascota!");
-            } else {
-                showMessage("Límite diario alcanzado (5 toques/día)");
-            }
+    document.getElementById("pet-container").addEventListener("click", async () => {
+        if (pet?.tap()) {
+            await renderPet();
+            showMessage("+$2 por jugar con tu mascota!");
+        } else {
+            showMessage("Límite diario alcanzado (5 toques/día)");
         }
-
-        setTimeout(() => {
-            petElement.classList.remove('shake');
-        }, 500);
     });
 
-    document.querySelectorAll('.item').forEach(item => {
-        item.addEventListener('click', async () => {
-            const cost = parseInt(item.dataset.cost);
+    document.querySelectorAll(".item").forEach(item => {
+        item.addEventListener("click", async () => {
             const itemData = {
-                cost: cost,
+                cost: +item.dataset.cost,
                 type: item.dataset.type,
-                hunger: parseInt(item.dataset.hunger) || 0,
-                happiness: parseInt(item.dataset.happiness) || 0,
-                name: item.dataset.name || item.textContent.trim()
+                hunger: +item.dataset.hunger,
+                happiness: +item.dataset.happiness,
+                name: item.dataset.name,
             };
-            
-            if (pet.buyItem(itemData)) {
+            if (pet?.buyItem(itemData)) {
                 await renderPet();
-                showMessage(`¡Compra realizada! ${item.textContent.trim()}`);
+                showMessage(`¡Compraste "${item.textContent.trim()}"!`);
             } else {
                 showMessage("No tienes suficiente dinero");
             }
         });
     });
 
-    // Generar dinero pasivo
     setInterval(async () => {
         if (pet?.collectMoney()) {
             await renderPet();
-            showMessage("¡Has ganado $5 por tiempo jugado!");
+            showMessage("¡Ganaste $5 por tiempo!");
         }
-    }, 60000);
-
-    // Actualizar tiempo de recuperación
-    setInterval(() => {
-        updateRecoveryTime();
     }, 60000);
 }
 
-window.addEventListener('DOMContentLoaded', initApp);
+window.addEventListener("DOMContentLoaded", initApp);
