@@ -767,16 +767,12 @@
                 requestAnimationFrame(animate);
             }
 
-            canvas.addEventListener('click', () => {
-                const randomId = Math.random().toString(36).substring(2);
-                currentData = generateCreatureData(randomId, level);
-            });
-
             animate();
         }
 
         // Estado del juego
         const defaultGameState = {
+            userUniqueId: false,
             money: 50,
             hunger: 100,
             happiness: 100,
@@ -1282,10 +1278,25 @@
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
-                drawUniqueCreature("creatureCanvas", userId, gameState.level, !gameState.isDead);
+                gameState.userUniqueId = userId;
+                drawUniqueCreature("creatureCanvas", gameState.userUniqueId, gameState.level, !gameState.isDead);
             }
             else {
-                drawUniqueCreature("creatureCanvas", Math.floor(Math.random() * 999999999999), gameState.level, !gameState.isDead);
+                if (!gameState.userUniqueId) {
+                    function getSecureRandom(min, max) {
+                        // Crear un array de 32 bits (4 bytes) con valores aleatorios
+                        const randomBuffer = new Uint32Array(1);
+                        window.crypto.getRandomValues(randomBuffer);
+
+                        // Convertir a número entre 0 y 1
+                        const randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+
+                        // Escalar al rango deseado [min, max]
+                        return Math.floor(randomNumber * (max - min + 1)) + min;
+                    }
+                    gameState.userUniqueId = toString(getSecureRandom(1000000000, 9999999999))
+                }
+                drawUniqueCreature("creatureCanvas", gameState.userUniqueId, gameState.level, !gameState.isDead);
             }
         }
 
