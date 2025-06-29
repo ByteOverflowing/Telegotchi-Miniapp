@@ -144,7 +144,7 @@ class Tamagotchi {
             this.money -= item.cost;
 
             if (item.type === 'food') {
-                this.feed(item.hunger || 20);
+                this.hunger = Math.max(0, this.hunger - (item.hunger || 20));
             } else if (item.type === 'toy') {
                 this.happiness = Math.min(100, this.happiness + (item.happiness || 20));
             } else if (item.type === 'collectible') {
@@ -154,7 +154,7 @@ class Tamagotchi {
                     date: new Date()
                 });
             }
-
+            this.update(); // Añadir esta línea
             return true;
         }
         return false;
@@ -403,29 +403,24 @@ function startWork() {
     document.getElementById('work-earned').textContent = '0';
     document.getElementById('work-bar').style.width = '0%';
 
-    // Configurar evento de clic
     document.getElementById('work-click-area').onclick = async () => {
-        workEarnings += pet.work();
+        pet.money += 2; // Cambio directo al dinero de la mascota
+        workEarnings += 2;
         document.getElementById('work-earned').textContent = workEarnings;
-
+        
         workProgress = Math.min(100, workProgress + 15);
         document.getElementById('work-bar').style.width = `${workProgress}%`;
-
+        
         if (workProgress >= 100) {
+            pet.money += 5; // Bonus directo
             workEarnings += 5;
             document.getElementById('work-earned').textContent = workEarnings;
             workProgress = 0;
             document.getElementById('work-bar').style.width = '0%';
         }
-
-        await renderPet(); // Actualizar UI y guardar
+        
+        await renderPet(); // Actualización inmediata
     };
-
-    // Configurar pérdida progresiva
-    workInterval = setInterval(() => {
-        workProgress = Math.max(0, workProgress - 1);
-        document.getElementById('work-bar').style.width = `${workProgress}%`;
-    }, 200);
 }
 
 function stopWork() {
