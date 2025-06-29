@@ -252,6 +252,95 @@ async function loadPetData() {
     }
 }
 
+function showInitForm() {
+    document.getElementById('init-form').classList.remove('hidden');
+    document.querySelector('.pet-container').classList.add('hidden');
+    document.querySelector('.stats').classList.add('hidden');
+    document.querySelector('.info').classList.add('hidden');
+    document.querySelector('.actions').classList.add('hidden');
+    document.getElementById('shop').classList.add('hidden');
+    document.getElementById('work-minigame').classList.add('hidden');
+}
+
+async function createPet() {
+    const nameInput = document.getElementById('pet-name-input');
+    const name = nameInput.value.trim() || "Tammy";
+
+    pet = new Tamagotchi(name);
+    await savePetData();
+
+    document.getElementById('init-form').classList.add('hidden');
+    document.querySelector('.pet-container').classList.remove('hidden');
+    document.querySelector('.stats').classList.remove('hidden');
+    document.querySelector('.info').classList.remove('hidden');
+    document.querySelector('.actions').classList.remove('hidden');
+
+    await renderPet();
+}
+
+function updateBar(id, value) {
+    const bar = document.getElementById(`${id}-bar`);
+    const text = document.getElementById(`${id}-value`);
+
+    bar.style.width = `${value}%`;
+    text.textContent = `${Math.round(value)}%`;
+
+    if (value > 70) {
+        bar.style.backgroundColor = value === 100 ? '#f44336' : '#ff9800';
+    } else if (value < 30) {
+        bar.style.backgroundColor = '#f44336';
+    } else {
+        bar.style.backgroundColor = '#4caf50';
+    }
+}
+
+function getStateText(state) {
+    const states = {
+        happy: '😊 Feliz',
+        hungry: '🍔 Hambriento',
+        sad: '😢 Triste',
+        sleepy: '😴 Durmiendo',
+        dirty: '💩 Sucio',
+        dead: '💀 Muerto'
+    };
+    return states[state] || state;
+}
+
+function getStageText(stage) {
+    const stages = {
+        egg: 'Huevo',
+        baby: 'Bebé',
+        adult: 'Adulto'
+    };
+    return stages[stage] || stage;
+}
+
+function showMessage(text) {
+    if (window.Telegram?.WebApp?.showAlert) {
+        Telegram.WebApp.showAlert(text);
+    } else {
+        alert(text);
+    }
+}
+
+function updateRecoveryTime() {
+    if (pet?.isSleeping) {
+        const minutes = pet.calculateRecoveryTime();
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        document.getElementById('recovery-time').textContent = `${hours}h ${mins}m`;
+    } else if (pet) {
+        document.getElementById('recovery-time').textContent = "No está durmiendo";
+    }
+}
+
+function updateTapInfo() {
+    if (pet) {
+        document.getElementById('tap-value').textContent = '2';
+        document.getElementById('taps-left').textContent = (5 - pet.tapsToday).toString();
+    }
+}
+
 async function renderPet() {
     if (!pet) return;
 
@@ -343,8 +432,6 @@ async function stopWork() {
     showMessage(`¡Ganaste $${workEarnings}!`);
 }
 
-// Resto de funciones auxiliares (updateBar, getStateText, etc.) se mantienen igual
-
 async function initApp() {
     tg = window.Telegram.WebApp;
     if (tg) {
@@ -355,12 +442,12 @@ async function initApp() {
     const savedPet = await loadPetData();
     if (savedPet) {
         pet = Tamagotchi.fromJSON(savedPet);
-        renderPet();
+        await renderPet();
     } else {
         showInitForm();
     }
 
-    // Configurar eventos
+    // Configurar eventos de botones
     document.getElementById('feed-btn').addEventListener('click', async () => {
         if (pet.feed()) {
             await renderPet();
@@ -375,8 +462,54 @@ async function initApp() {
         }
     });
 
+    document.getElementById('sleep-btn').addEventListener('click', async () => {
+        if (pet.sleep()) {
+            const action = pet.isSleeping ? "dormido" : "despertado";
+            await renderPet();
+            showMessage(`🛌 Has ${action} a tu Tamagotchi!`);
+        }
+    });
+
+    document.getElementById('clean-btn').addEventListener('click', async () => {
+        if (pet.clean()) {
+            await renderPet();
+            showMessage("🚿 Has limpiado a tu Tamagotchi!");
+        }
+    });
+
+    document.getElementById('revive-btn').addEventListener('click', async () => {
+        if (pet.revive()) {
+            await renderPet();
+            showMessage("💖 Has revivido a tu Tamagotchi!");
+        }
+    });
+
     document.getElementById('shop-btn').addEventListener('click', () => {
         document.getElementById('shop').classList.toggle('hidden');
+    });
+
+    document.getElementById('work-btn').addEventListener('click', startWork);
+    document.getElementById('work-stop').addEventListener('click', stopWork);
+
+    document.getElementById('create-btn').addEventListener('click', createPet);
+
+    document.getElementById('pet-container').addEventListener('click', async () => {
+        const petElement = document.getElementById('pet');
+        petElement.classList.add('shake');
+
+        if (pet.isAlive) {
+            const earned = pet.tap();
+            if (earned) {
+                await renderPet();
+                showMessage("+$2 por jugar con tu mascota!");
+            } else {
+                showMessage("Límite diario alcanzado (5 toques/día)");
+            }
+        }
+
+        setTimeout(() => {
+            petElement.classList.remove('shake');
+        }, 500);
     });
 
     document.querySelectorAll('.item').forEach(item => {
@@ -399,7 +532,18 @@ async function initApp() {
         });
     });
 
-    // Configurar el resto de eventos...
+    // Generar dinero pasivo
+    setInterval(async () => {
+        if (pet?.collectMoney()) {
+            await renderPet();
+            showMessage("¡Has ganado $5 por tiempo jugado!");
+        }
+    }, 60000);
+
+    // Actualizar tiempo de recuperación
+    setInterval(() => {
+        updateRecoveryTime();
+    }, 60000);
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
