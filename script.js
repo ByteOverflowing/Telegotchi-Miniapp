@@ -140,7 +140,6 @@ class Tamagotchi {
     }
 }
 
-// App
 let pet;
 
 async function savePet() {
@@ -152,7 +151,8 @@ function updateBars() {
     stats.forEach(stat => {
         const value = Math.round(pet[stat]);
         document.getElementById(`${stat}-bar`).style.width = `${value}%`;
-        document.getElementById(`${stat}-value`).textContent = `${value}%`;
+        const textSpan = document.getElementById(`${stat}-value`);
+        if (textSpan) textSpan.textContent = `${value}%`;
     });
     document.getElementById("money").textContent = pet.money;
     document.getElementById("pet-state").textContent = getStateText(pet.state);
@@ -201,13 +201,21 @@ document.addEventListener("DOMContentLoaded", () => {
         updateBars();
     };
 
-    document.getElementById("feed-btn").onclick = () => { pet.feed(); savePet(); updateBars(); };
-    document.getElementById("play-btn").onclick = () => { pet.play(); savePet(); updateBars(); };
-    document.getElementById("sleep-btn").onclick = () => { pet.sleep(); savePet(); updateBars(); };
-    document.getElementById("clean-btn").onclick = () => { pet.clean(); savePet(); updateBars(); };
-    document.getElementById("revive-btn").onclick = () => { pet.revive(); savePet(); updateBars(); };
+    const actions = [
+        ["feed-btn", () => pet.feed()],
+        ["play-btn", () => pet.play()],
+        ["sleep-btn", () => pet.sleep()],
+        ["clean-btn", () => pet.clean()],
+        ["revive-btn", () => pet.revive()]
+    ];
 
-    document.getElementById("pet-container").onclick = () => {
+    actions.forEach(([id, action]) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.onclick = () => { action(); savePet(); updateBars(); };
+    });
+
+    const petContainer = document.getElementById("pet-container");
+    if (petContainer) petContainer.onclick = () => {
         if (pet.tap()) {
             savePet();
             updateBars();
