@@ -1,156 +1,178 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="telegram-web-app-cloud-storage" content="true">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="telegram-web-app-cloud-storage" content="true" />
     <title>Telegotchi</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Spline+Sans:wght@400;500;700"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
-<body>
-    <div id="app">
-        <h1>Telegotchi</h1>
-        <div id="pet-stage">
-            <img id="pet" src="egg.png" alt="Telegotchi">
-            <p id="status">Eclosionando...</p>
-        </div>
+  </head>
+  <body>
+    <div class="relative flex size-full min-h-screen flex-col bg-[#122118] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+      <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#264532] px-10 py-3">
+          <div class="flex items-center gap-4 text-white">
+            <div class="size-4">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Telegotchi</h2>
+          </div>
+        </header>
 
-        <div id="controls" style="display:none;">
-            <button onclick="feed()">🍖 Alimentar</button>
-            <button onclick="play()">🎮 Jugar</button>
-            <button onclick="sleep()">😴 Dormir</button>
-            <button onclick="clean()">🧼 Limpiar</button>
-        </div>
+        <main class="flex flex-col flex-1 px-6 py-4 gap-6">
+          <div class="flex justify-center">
+            <img id="pet" src="egg.png" alt="Telegotchi" class="w-40 aspect-square rounded-xl border border-[#366348]" />
+          </div>
+          <p id="status" class="text-center text-white font-medium">Eclosionando...</p>
 
-        <div id="stats">
-            <p>Hambre: <span id="hunger">5</span></p>
-            <p>Felicidad: <span id="happiness">5</span></p>
-            <p>Energía: <span id="energy">5</span></p>
-            <p>Limpieza: <span id="cleanliness">5</span></p>
-            <p>💰 Dinero: $<span id="money">0</span></p>
-        </div>
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="feed()" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold">🍖 Alimentar</button>
+            <button onclick="play()" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold">🎮 Jugar</button>
+            <button onclick="sleep()" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold">😴 Dormir</button>
+            <button onclick="clean()" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 font-bold">🧼 Limpiar</button>
+          </div>
 
-        <div id="shop">
-            <h2>Tienda</h2>
-            <button onclick="buyItem('food')">Comprar comida ($5)</button>
-            <button onclick="buyItem('toy')">Comprar juguete ($10)</button>
-        </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-white">
+            <div class="rounded-xl border border-[#366348] p-4"><p>Hambre: <span id="hunger">5</span></p></div>
+            <div class="rounded-xl border border-[#366348] p-4"><p>Felicidad: <span id="happiness">5</span></p></div>
+            <div class="rounded-xl border border-[#366348] p-4"><p>Energía: <span id="energy">5</span></p></div>
+            <div class="rounded-xl border border-[#366348] p-4"><p>Limpieza: <span id="cleanliness">5</span></p></div>
+            <div class="rounded-xl border border-[#366348] p-4 col-span-2 sm:col-span-1"><p>💰 Dinero: $<span id="money">0</span></p></div>
+          </div>
+
+          <div class="mt-6">
+            <h2 class="text-white text-lg font-bold mb-2">Tienda</h2>
+            <div class="flex flex-wrap gap-3">
+              <button onclick="buyItem('food')" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold">Comprar comida ($5)</button>
+              <button onclick="buyItem('toy')" class="bg-[#38e07b] text-[#122118] rounded-xl py-2 px-4 font-bold">Comprar juguete ($10)</button>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <script>
-        let hunger = 5, happiness = 5, energy = 5, cleanliness = 5, money = 0;
-        let stage = 'egg';
+      let hunger = 5, happiness = 5, energy = 5, cleanliness = 5, money = 0;
+      let stage = 'egg';
 
-        async function loadState() {
-            try {
-                const keys = await Telegram.WebApp.CloudStorage.getKeys();
-                const data = await Telegram.WebApp.CloudStorage.getItems(keys);
-                hunger = parseInt(data.hunger) || 5;
-                happiness = parseInt(data.happiness) || 5;
-                energy = parseInt(data.energy) || 5;
-                cleanliness = parseInt(data.cleanliness) || 5;
-                money = parseInt(data.money) || 0;
-                stage = data.stage || 'egg';
-                updatePetStage();
-                updateStats();
-            } catch (err) {
-                console.warn('No se pudo cargar el estado:', err);
-            }
+      async function loadState() {
+        try {
+          const keys = await Telegram.WebApp.CloudStorage.getKeys();
+          const data = await Telegram.WebApp.CloudStorage.getItems(keys);
+          hunger = parseInt(data.hunger) || 5;
+          happiness = parseInt(data.happiness) || 5;
+          energy = parseInt(data.energy) || 5;
+          cleanliness = parseInt(data.cleanliness) || 5;
+          money = parseInt(data.money) || 0;
+          stage = data.stage || 'egg';
+          updatePetStage();
+          updateStats();
+        } catch (err) {
+          console.warn('No se pudo cargar el estado:', err);
         }
+      }
 
-        async function saveState() {
-            try {
-                await Telegram.WebApp.CloudStorage.setItems({
-                    hunger: hunger.toString(),
-                    happiness: happiness.toString(),
-                    energy: energy.toString(),
-                    cleanliness: cleanliness.toString(),
-                    money: money.toString(),
-                    stage: stage
-                });
-            } catch (err) {
-                console.warn('No se pudo guardar el estado:', err);
-            }
+      async function saveState() {
+        try {
+          await Telegram.WebApp.CloudStorage.setItems({
+            hunger: hunger.toString(),
+            happiness: happiness.toString(),
+            energy: energy.toString(),
+            cleanliness: cleanliness.toString(),
+            money: money.toString(),
+            stage: stage
+          });
+        } catch (err) {
+          console.warn('No se pudo guardar el estado:', err);
         }
+      }
 
-        function updateStats() {
-            document.getElementById('hunger').innerText = hunger;
-            document.getElementById('happiness').innerText = happiness;
-            document.getElementById('energy').innerText = energy;
-            document.getElementById('cleanliness').innerText = cleanliness;
-            document.getElementById('money').innerText = money;
-            saveState();
+      function updateStats() {
+        document.getElementById('hunger').innerText = hunger;
+        document.getElementById('happiness').innerText = happiness;
+        document.getElementById('energy').innerText = energy;
+        document.getElementById('cleanliness').innerText = cleanliness;
+        document.getElementById('money').innerText = money;
+        saveState();
+      }
+
+      function updatePetStage() {
+        const petImg = document.getElementById('pet');
+        const statusText = document.getElementById('status');
+
+        if (stage === 'baby') {
+          petImg.src = 'pet.png';
+          statusText.innerText = '¡Hola! Soy tu Telegotchi';
+        } else {
+          petImg.src = 'egg.png';
+          statusText.innerText = 'Eclosionando...';
         }
+      }
 
-        function updatePetStage() {
-            const petImg = document.getElementById('pet');
-            const statusText = document.getElementById('status');
-            const controls = document.getElementById('controls');
+      function feed() {
+        if (money >= 5) {
+          hunger = Math.min(10, hunger + 2);
+          money -= 5;
+          updateStats();
+        } else alert('¡No tienes suficiente dinero!');
+      }
 
-            if (stage === 'baby') {
-                petImg.src = 'pet.png';
-                statusText.innerText = '¡Hola! Soy tu Telegotchi';
-                controls.style.display = 'block';
-            } else {
-                petImg.src = 'egg.png';
-                statusText.innerText = 'Eclosionando...';
-            }
+      function play() {
+        happiness = Math.min(10, happiness + 2);
+        energy = Math.max(0, energy - 1);
+        money += 1;
+        updateStats();
+      }
+
+      function sleep() {
+        energy = 10;
+        happiness = Math.max(0, happiness - 1);
+        updateStats();
+      }
+
+      function clean() {
+        cleanliness = 10;
+        money += 1;
+        updateStats();
+      }
+
+      function buyItem(type) {
+        if (type === 'food' && money >= 5) {
+          money -= 5;
+          hunger = Math.min(10, hunger + 3);
+        } else if (type === 'toy' && money >= 10) {
+          money -= 10;
+          happiness = Math.min(10, happiness + 3);
+        } else {
+          alert('¡No tienes suficiente dinero!');
+          return;
         }
+        updateStats();
+      }
 
-        function feed() {
-            if (money >= 5) {
-                hunger = Math.min(10, hunger + 2);
-                money -= 5;
-                updateStats();
-            } else alert('¡No tienes suficiente dinero!');
-        }
+      function hatch() {
+        setTimeout(() => {
+          stage = 'baby';
+          updatePetStage();
+          updateStats();
+        }, 3000);
+      }
 
-        function play() {
-            happiness = Math.min(10, happiness + 2);
-            energy = Math.max(0, energy - 1);
-            money += 1;
-            updateStats();
-        }
-
-        function sleep() {
-            energy = 10;
-            happiness = Math.max(0, happiness - 1);
-            updateStats();
-        }
-
-        function clean() {
-            cleanliness = 10;
-            money += 1;
-            updateStats();
-        }
-
-        function buyItem(type) {
-            if (type === 'food' && money >= 5) {
-                money -= 5;
-                hunger = Math.min(10, hunger + 3);
-            } else if (type === 'toy' && money >= 10) {
-                money -= 10;
-                happiness = Math.min(10, happiness + 3);
-            } else {
-                alert('¡No tienes suficiente dinero!');
-                return;
-            }
-            updateStats();
-        }
-
-        function hatch() {
-            setTimeout(() => {
-                stage = 'baby';
-                updatePetStage();
-                updateStats();
-            }, 3000);
-        }
-
-        Telegram.WebApp.ready();
-        loadState().then(() => {
-            if (stage === 'egg') hatch();
-        });
+      Telegram.WebApp.ready();
+      loadState().then(() => {
+        if (stage === 'egg') hatch();
+      });
     </script>
-</body>
+  </body>
 </html>
