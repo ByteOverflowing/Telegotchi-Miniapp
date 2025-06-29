@@ -773,7 +773,7 @@
 
         // Estado del juego
         const defaultGameState = {
-            userUniqueId: false,
+            uniqueId: false,
             money: 50,
             hunger: 100,
             happiness: 100,
@@ -1279,25 +1279,64 @@
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
-                gameState.userUniqueId = userId;
-                drawUniqueCreature("creatureCanvas", gameState.userUniqueId, gameState.level, !gameState.isDead);
+                gameState.uniqueId = userId;
+                drawUniqueCreature("creatureCanvas", gameState.uniqueId, gameState.level, !gameState.isDead);
             }
             else {
-                if (!gameState.userUniqueId) {
-                    function getSecureRandom(min, max) {
-                        // Crear un array de 32 bits (4 bytes) con valores aleatorios
-                        const randomBuffer = new Uint32Array(1);
-                        window.crypto.getRandomValues(randomBuffer);
+                if (!gameState.uniqueId) {
+                    function generarSemillaUnica() {
+                        // 1. Base: Fecha y hora actual en milisegundos
+                        const fechaActual = Date.now();
 
-                        // Convertir a número entre 0 y 1
-                        const randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+                        // 2. Precisión extra (usando Performance API en navegadores)
+                        let precisionExtra = 0;
+                        if (typeof performance !== 'undefined' && performance.now) {
+                            precisionExtra = performance.now() * 1000; // Microsegundos
+                        }
 
-                        // Escalar al rango deseado [min, max]
-                        return Math.floor(randomNumber * (max - min + 1)) + min;
+                        // 3. Aleatoriedad segura (crypto) o fallback a Math.random
+                        let componenteAleatorio;
+                        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+                            const array = new Uint32Array(1);
+                            crypto.getRandomValues(array);
+                            componenteAleatorio = array[0];
+                        } else {
+                            componenteAleatorio = Math.floor(Math.random() * 0xFFFFFFFF);
+                        }
+
+                        // Combinamos todo (usando XOR para mezclar bits)
+                        const semilla = fechaActual ^ precisionExtra ^ componenteAleatorio;
+                        return semilla;
                     }
-                    gameState.userUniqueId = toString(getSecureRandom(1000000000, 9999999999))
+                    class GeneradorAleatorioConSemilla {
+                        constructor(semilla) {
+                            this.semilla = semilla || 12345; // Semilla por defecto si no se provee
+                        }
+
+                        // Algoritmo Lehmer (MINSTD)
+                        next() {
+                            this.semilla = (this.semilla * 48271) % 0x7FFFFFFF;
+                            return this.semilla / 0x7FFFFFFF; // Normalizado a [0, 1)
+                        }
+
+                        // Entero entre [min, max] (ambos incluidos)
+                        nextInt(min, max) {
+                            return Math.floor(this.next() * (max - min + 1)) + min;
+                        }
+                    }
+                    // 1. Generar semilla única
+                    const semilla = generarSemillaUnica();
+                    
+
+                    // 2. Crear generador con esa semilla
+                    const rng = new GeneradorAleatorioConSemilla(semilla);
+
+                    // 3. Generar números aleatorios reproducibles
+                    
+                    console.log(rng.nextInt(1, 100)); // Ej: 42 (entre 1 y 100)
+                    gameState.uniqueId = toString(rng.nextInt(1000000000,9999999999))
                 }
-                drawUniqueCreature("creatureCanvas", gameState.userUniqueId, gameState.level, !gameState.isDead);
+                drawUniqueCreature("creatureCanvas", gameState.uniqueId, gameState.level, !gameState.isDead);
             }
         }
 
