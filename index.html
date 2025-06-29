@@ -1,17 +1,24 @@
-<html>
+<!DOCTYPE html>
+<html lang="es">
   <head>
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="telegram-web-app-cloud-storage" content="true" />
+    <title>Telegotchi</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com/"
+      crossorigin=""
+    />
     <link
       rel="stylesheet"
       as="style"
       onload="this.rel='stylesheet'"
       href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
     />
-
-    <title>Stitch Design</title>
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
-
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
       /* Modal para pedir nombre */
@@ -55,318 +62,371 @@
       #nameModal button:hover {
         background: #76c28a;
       }
+
+      /* Header adaptado para móviles */
+      header {
+        @apply flex flex-col items-center justify-center gap-2 border-b border-solid border-b-[#2a4133] px-6 py-4;
+      }
+      @media (min-width: 640px) {
+        header {
+          @apply flex-row justify-between px-10 py-3;
+        }
+      }
+
+      /* Logo + titulo en columna en móvil, fila en escritorio */
+      .header-content {
+        @apply flex flex-col items-center gap-2;
+      }
+      @media (min-width: 640px) {
+        .header-content {
+          @apply flex-row items-center gap-4;
+        }
+      }
     </style>
   </head>
-  <body>
-    <div
-      class="relative flex size-full min-h-screen flex-col bg-[#141f18] dark group/design-root overflow-x-hidden"
-      style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
-    >
-      <div class="layout-container flex h-full grow flex-col">
-        <header
-          class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#2a4133] px-10 py-3"
-        >
-          <div class="flex items-center gap-4 text-white">
-            <div class="size-4">
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-            </div>
-            <h2
-              class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
-              id="headerTitle"
+  <body
+    class='relative flex size-full min-h-screen flex-col bg-[#141f18] dark group/design-root overflow-x-hidden font-sans'
+    style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
+  >
+    <div class="layout-container flex h-full grow flex-col">
+      <header>
+        <div class="header-content text-white">
+          <div class="size-4">
+            <svg
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-10 h-10"
             >
-              PetPal
-            </h2>
+              <path
+                d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z"
+                fill="currentColor"
+              ></path>
+            </svg>
           </div>
-          <div class="flex flex-1 justify-end gap-8">
-            <button
-              class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#2a4133] text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5"
-              title="Notificaciones"
-            >
-              <div
-                class="text-white"
-                data-icon="Bell"
-                data-size="20px"
-                data-weight="regular"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20px"
-                  height="20px"
-                  fill="currentColor"
-                  viewBox="0 0 256 256"
-                >
-                  <path
-                    d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"
-                  ></path>
-                </svg>
-              </div>
-            </button>
-            <div
-              class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCW7DpMCv1c2oFeb0q72NbvS07GrwyabPxDsa7rLmAFKp5wLU4vtaJzIFS57kOCjUTVjcHZrgcY-fW3AHntyhziDoQxgUlC2etiiAdRdtjKFFJ4QhY6Ri7Wi4F5prUhcb6ncnhmPs5V9VICDvGMI7tnWDIGl-T3uB9iny80KYUigIhExnVNWppMv8EApw3NnwoSg7KoL-mM-jirfjeXeFC79nqi9SGI0ix9MA24TmA74WVYQuSK88GxiRbgXh4lNQJcDyUhB2MYZP0");'
-            ></div>
-          </div>
-        </header>
-        <div class="px-40 flex flex-1 justify-center py-5">
-          <div
-            class="layout-content-container flex flex-col max-w-[960px] flex-1 text-white"
+          <h2
+            class="text-white text-lg font-bold leading-tight tracking-[-0.015em]"
+            id="headerTitle"
           >
-            <h2
-              class="tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5"
-            >
-              My Pet - <span id="petNameDisplay">...</span>
-            </h2>
-            <div class="flex w-full grow bg-[#141f18] @container p-4 rounded-xl border border-[#2a4133]">
-              <div
-                class="w-full gap-1 overflow-hidden bg-[#141f18] @[480px]:gap-2 aspect-[2/3] rounded-xl flex justify-center items-center"
-              >
-                <img
-                  id="pet"
-                  src="https://i.imgur.com/3XzKn3B.png"
-                  alt="Telegotchi"
-                  class="rounded-xl max-h-[300px] object-contain"
-                />
-              </div>
-            </div>
+            Telegotchi
+          </h2>
+        </div>
+      </header>
 
-            <!-- Stats -->
-            <div class="flex flex-wrap gap-4 p-4">
-              <div
-                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-                title="0% = lleno, 100% = hambriento"
-              >
-                <p class="text-white text-base font-medium leading-normal">
-                  Hunger
-                </p>
-                <p
-                  class="text-white tracking-light text-2xl font-bold leading-tight"
-                  id="statHunger"
-                >
-                  50%
-                </p>
-              </div>
-              <div
-                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-              >
-                <p class="text-white text-base font-medium leading-normal">
-                  Happiness
-                </p>
-                <p
-                  class="text-white tracking-light text-2xl font-bold leading-tight"
-                  id="statHappiness"
-                >
-                  50%
-                </p>
-              </div>
-              <div
-                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-              >
-                <p class="text-white text-base font-medium leading-normal">
-                  Energy
-                </p>
-                <p
-                  class="text-white tracking-light text-2xl font-bold leading-tight"
-                  id="statEnergy"
-                >
-                  50%
-                </p>
-              </div>
-              <div
-                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-              >
-                <p class="text-white text-base font-medium leading-normal">
-                  Cleanliness
-                </p>
-                <p
-                  class="text-white tracking-light text-2xl font-bold leading-tight"
-                  id="statCleanliness"
-                >
-                  50%
-                </p>
-              </div>
-              <div
-                class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
-              >
-                <p class="text-white text-base font-medium leading-normal">Money</p>
-                <p
-                  class="text-white tracking-light text-2xl font-bold leading-tight"
-                  id="statMoney"
-                >
-                  $0
-                </p>
-              </div>
-            </div>
-
-            <!-- Botones acciones -->
-            <div class="flex justify-stretch px-4 gap-4 flex-wrap">
-              <button
-                id="btnFeed"
-                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Feed"
-              >
-                Feed 🍖
-              </button>
-              <button
-                id="btnPlay"
-                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Play"
-              >
-                Play 🎮
-              </button>
-              <button
-                id="btnSleep"
-                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Sleep"
-              >
-                Sleep 😴
-              </button>
-              <button
-                id="btnClean"
-                class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Clean"
-              >
-                Clean 🧼
-              </button>
-            </div>
-
-            <!-- Tienda -->
-            <h3
-              class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-8"
-            >
-              Store
-            </h3>
+      <main class="px-40 flex flex-1 justify-center py-5">
+        <div class="layout-content-container flex flex-col max-w-[960px] flex-1 text-white">
+          <h2
+            class="tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5"
+            id="petNameDisplay"
+          >
+            Mi Mascota
+          </h2>
+          <div
+            class="flex w-full grow bg-[#141f18] @container p-4 rounded-xl border border-[#2a4133]"
+          >
             <div
-              class="flex flex-wrap gap-3 px-4 pb-6"
-              id="storeButtons"
+              class="w-full gap-1 overflow-hidden bg-[#141f18] @[480px]:gap-2 aspect-[2/3] rounded-xl flex"
             >
-              <button
-                data-type="food_basic"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Basic food (-Hunger) $5"
-              >
-                Food Basic ($5)
-              </button>
-              <button
-                data-type="food_special"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Special food (+Happiness, -Hunger) $8"
-              >
-                Food Special ($8)
-              </button>
-              <button
-                data-type="toy_basic"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Toy Basic (+Happiness) $10"
-              >
-                Toy Basic ($10)
-              </button>
-              <button
-                data-type="toy_deluxe"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Toy Deluxe (+Energy) $15"
-              >
-                Toy Deluxe ($15)
-              </button>
-              <button
-                data-type="collectible_statue"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#bfa14c] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Rare collectible statue $50"
-              >
-                Statue Collectible ($50)
-              </button>
-              <button
-                data-type="collectible_painting"
-                class="flex min-w-[140px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#bfa14c] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
-                title="Very rare collectible painting $100"
-              >
-                Painting Collectible ($100)
-              </button>
+              <div
+                id="petImage"
+                class="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
+                style='background-image: url("https://i.imgur.com/O8bD2Rl.png");'
+                title="Mascota Telegotchi"
+              ></div>
             </div>
           </div>
+
+          <div
+            class="flex flex-wrap gap-4 p-4 justify-center"
+            id="statsContainer"
+          >
+            <div
+              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+            >
+              <p class="text-white text-base font-medium leading-normal">Hambre</p>
+              <p
+                class="text-white tracking-light text-2xl font-bold leading-tight"
+                id="hungerDisplay"
+              >
+                50%
+              </p>
+            </div>
+            <div
+              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+            >
+              <p class="text-white text-base font-medium leading-normal">Sueño</p>
+              <p
+                class="text-white tracking-light text-2xl font-bold leading-tight"
+                id="sleepDisplay"
+              >
+                50%
+              </p>
+            </div>
+            <div
+              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+            >
+              <p class="text-white text-base font-medium leading-normal">Felicidad</p>
+              <p
+                class="text-white tracking-light text-2xl font-bold leading-tight"
+                id="happinessDisplay"
+              >
+                50%
+              </p>
+            </div>
+            <div
+              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+            >
+              <p class="text-white text-base font-medium leading-normal">Energía</p>
+              <p
+                class="text-white tracking-light text-2xl font-bold leading-tight"
+                id="energyDisplay"
+              >
+                50%
+              </p>
+            </div>
+            <div
+              class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-[#3c5d49]"
+            >
+              <p class="text-white text-base font-medium leading-normal">Limpieza</p>
+              <p
+                class="text-white tracking-light text-2xl font-bold leading-tight"
+                id="cleanlinessDisplay"
+              >
+                50%
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-center gap-4 flex-wrap px-4 py-3">
+            <button
+              id="btnSleep"
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              Dormir
+            </button>
+            <button
+              id="btnFeed"
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              Alimentar
+            </button>
+            <button
+              id="btnPlay"
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              Jugar
+            </button>
+            <button
+              id="btnClean"
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              Limpiar
+            </button>
+          </div>
+
+          <h3
+            class="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4"
+          >
+            Tienda
+          </h3>
+          <div
+            class="flex flex-wrap gap-3 px-4 justify-center"
+            id="shopContainer"
+          >
+            <!-- Los botones se crearán dinámicamente -->
+          </div>
+          <div class="text-white px-4 pt-4 pb-8 text-center text-xl font-bold">
+            Dinero: $<span id="moneyDisplay">0</span>
+          </div>
         </div>
+      </main>
+    </div>
+
+    <!-- Modal pedir nombre -->
+    <div id="nameModal" style="display:none;">
+      <div id="nameModalContent">
+        <h2 class="text-white text-xl font-bold">¡Dale un nombre a tu mascota!</h2>
+        <input type="text" id="petNameInput" placeholder="Nombre de la mascota" maxlength="20" />
+        <button id="saveNameBtn">Guardar</button>
       </div>
+    </div>
 
-      <!-- Modal pedir nombre -->
-      <div id="nameModal" style="display:none;">
-        <div id="nameModalContent">
-          <h2 style="color:#94e0b2; font-weight:bold; font-size:1.5rem;">¿Cómo se llama tu mascota?</h2>
-          <input
-            type="text"
-            id="petNameInput"
-            placeholder="Escribe un nombre"
-            maxlength="15"
-            autocomplete="off"
-          />
-          <button id="btnSaveName">Guardar</button>
-        </div>
-      </div>
+    <script>
+      Telegram.WebApp.ready();
 
-      <script>
-        // Estadísticas de 0 a 10 internas
-        let hunger = 5,
-          happiness = 5,
-          energy = 5,
-          cleanliness = 5,
-          money = 0,
-          stage = "egg",
-          petName = "";
+      // Estadísticas de la mascota (0-100)
+      let hunger = 50;
+      let sleep = 50;
+      let happiness = 50;
+      let energy = 50;
+      let cleanliness = 50;
+      let money = 0;
+      let petName = "Mi Mascota";
 
-        // Coleccionables
-        let collectibles = {
-          statue: false,
-          painting: false,
-        };
+      // Items en tienda
+      const shopItems = [
+        { id: "foodBasic", name: "Comida básica", price: 5, effect: () => { hunger = Math.min(100, hunger + 20); } },
+        { id: "foodEnergy", name: "Snack energético", price: 8, effect: () => { energy = Math.min(100, energy + 15); } },
+        { id: "toySimple", name: "Juguete simple", price: 10, effect: () => { happiness = Math.min(100, happiness + 20); } },
+        { id: "toyPremium", name: "Juguete premium", price: 25, effect: () => { happiness = Math.min(100, happiness + 40); } },
+        { id: "cleaner", name: "Kit limpieza", price: 15, effect: () => { cleanliness = Math.min(100, cleanliness + 30); } },
+        { id: "rareFigurine", name: "Figura coleccionable", price: 100, effect: () => { alert("¡Has comprado una figura coleccionable rara!"); } },
+        { id: "goldenEgg", name: "Huevo dorado", price: 200, effect: () => { money += 50; alert("¡Encontraste dinero extra!"); } },
+      ];
 
-        const petNameDisplay = document.getElementById("petNameDisplay");
-        const headerTitle = document.getElementById("headerTitle");
+      function saveState() {
+        Telegram.WebApp.CloudStorage.setItems({
+          hunger: hunger.toString(),
+          sleep: sleep.toString(),
+          happiness: happiness.toString(),
+          energy: energy.toString(),
+          cleanliness: cleanliness.toString(),
+          money: money.toString(),
+          petName,
+        });
+      }
 
-        // Mostrar modal para pedir nombre
-        const nameModal = document.getElementById("nameModal");
-        const petNameInput = document.getElementById("petNameInput");
-        const btnSaveName = document.getElementById("btnSaveName");
-
-        async function loadState() {
-          try {
-            const keys = await Telegram.WebApp.CloudStorage.getKeys();
-            const data = await Telegram.WebApp.CloudStorage.getItems(keys);
-            hunger = parseInt(data.hunger) || 5;
-            happiness = parseInt(data.happiness) || 5;
-            energy = parseInt(data.energy) || 5;
-            cleanliness = parseInt(data.cleanliness) || 5;
-            money = parseInt(data.money) || 0;
-            stage = data.stage || "egg";
-            petName = data.petName || "";
-            collectibles.statue = data.collectible_statue === "true";
-            collectibles.painting = data.collectible_painting === "true";
-
-            if (!petName) {
-              showNameModal();
-            } else {
-              updatePetNameDisplay();
-            }
-            updateStatsDisplay();
-            updatePetStage();
-          } catch (e) {
-            console.warn("No se pudo cargar estado:", e);
-            showNameModal();
-          }
+      async function loadState() {
+        try {
+          const keys = await Telegram.WebApp.CloudStorage.getKeys();
+          const data = await Telegram.WebApp.CloudStorage.getItems(keys);
+          hunger = parseInt(data.hunger) || 50;
+          sleep = parseInt(data.sleep) || 50;
+          happiness = parseInt(data.happiness) || 50;
+          energy = parseInt(data.energy) || 50;
+          cleanliness = parseInt(data.cleanliness) || 50;
+          money = parseInt(data.money) || 0;
+          petName = data.petName || "Mi Mascota";
+          updateUI();
+          checkName();
+        } catch (e) {
+          console.warn("No se pudo cargar el estado", e);
+          checkName();
+          updateUI();
         }
+      }
 
-        async function saveState() {
-          try {
-            await Telegram.WebApp.CloudStorage.setItems({
-              hunger: hunger.toString(),
-              happiness: happiness.toString(),
-              energy: energy.toString(),
-              cleanliness: cleanliness.toString(),
-              money: money.toString(),
-             
+      function updateUI() {
+        document.getElementById("hungerDisplay").innerText = hunger + "%";
+        document.getElementById("sleepDisplay").innerText = sleep + "%";
+        document.getElementById("happinessDisplay").innerText = happiness + "%";
+        document.getElementById("energyDisplay").innerText = energy + "%";
+        document.getElementById("cleanlinessDisplay").innerText = cleanliness + "%";
+        document.getElementById("moneyDisplay").innerText = money;
+        document.getElementById("petNameDisplay").innerText = petName;
+      }
+
+      function updateShop() {
+        const shopContainer = document.getElementById("shopContainer");
+        shopContainer.innerHTML = "";
+        shopItems.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#94e0b2] text-[#141f18] text-sm font-bold leading-normal tracking-[0.015em]";
+          btn.innerText = `${item.name} ($${item.price})`;
+          btn.onclick = () => buyItem(item.id);
+          shopContainer.appendChild(btn);
+        });
+      }
+
+      function buyItem(id) {
+        const item = shopItems.find((i) => i.id === id);
+        if (!item) return;
+        if (money < item.price) {
+          alert("¡No tienes suficiente dinero!");
+          return;
+        }
+        money -= item.price;
+        item.effect();
+        saveState();
+        updateUI();
+      }
+
+      // Funciones de acciones
+      function feed() {
+        if (money < 5) {
+          alert("¡No tienes suficiente dinero para alimentar!");
+          return;
+        }
+        hunger = Math.min(100, hunger + 15);
+        money -= 5;
+        saveState();
+        updateUI();
+      }
+
+      function play() {
+        if (energy < 10) {
+          alert("¡Tu mascota está muy cansada para jugar!");
+          return;
+        }
+        happiness = Math.min(100, happiness + 15);
+        energy = Math.max(0, energy - 10);
+        money += 2;
+        saveState();
+        updateUI();
+      }
+
+      function sleepFunc() {
+        sleep = 100;
+        energy = Math.min(100, energy + 30);
+        happiness = Math.max(0, happiness - 5);
+        saveState();
+        updateUI();
+      }
+
+      function clean() {
+        cleanliness = 100;
+        money += 1;
+        saveState();
+        updateUI();
+      }
+
+      // Disminución automática de stats cada cierto tiempo
+      function autoDecrease() {
+        hunger = Math.max(0, hunger - 1);
+        sleep = Math.max(0, sleep - 1);
+        happiness = Math.max(0, happiness - 1);
+        energy = Math.max(0, energy - 1);
+        cleanliness = Math.max(0, cleanliness - 1);
+        saveState();
+        updateUI();
+      }
+
+      // Modal nombre mascota
+      const nameModal = document.getElementById("nameModal");
+      const petNameInput = document.getElementById("petNameInput");
+      const saveNameBtn = document.getElementById("saveNameBtn");
+
+      function checkName() {
+        if (!petName || petName === "Mi Mascota") {
+          nameModal.style.display = "flex";
+        }
+      }
+
+      saveNameBtn.onclick = () => {
+        const name = petNameInput.value.trim();
+        if (name.length < 1) {
+          alert("Por favor, escribe un nombre válido.");
+          return;
+        }
+        petName = name;
+        nameModal.style.display = "none";
+        updateUI();
+        saveState();
+      };
+
+      // Botones de acciones
+      document.getElementById("btnFeed").onclick = feed;
+      document.getElementById("btnPlay").onclick = play;
+      document.getElementById("btnSleep").onclick = sleepFunc;
+      document.getElementById("btnClean").onclick = clean;
+
+      // Inicialización
+      loadState();
+      updateShop();
+
+      // Disminuye stats cada 30 segundos (ajusta si quieres)
+      setInterval(autoDecrease, 30000);
+    </script>
+  </body>
+</html>
