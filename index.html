@@ -439,7 +439,7 @@
 <body>
     <div class="container">
         <h1>Telegotchi</h1>
-
+        <h1 id="test"></h1>
         <div class="pet-container" id="petContainer">
             <div class="pet-level" id="petLevel">1</div>
             <div class="pet-image" id="petImage"><canvas id="creatureCanvas"></canvas></div>
@@ -1276,9 +1276,11 @@
 
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
+            const test = document.getElementById("test")
             if (Telegram)
-            alert(JSON.stringify(Telegram))
-            alert(JSON.stringify(window))
+            test.innerHTML = JSON.stringify(Telegram)
+            else
+            test.innerHTML = JSON.stringify(window)
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
