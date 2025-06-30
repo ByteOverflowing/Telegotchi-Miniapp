@@ -1276,6 +1276,9 @@
 
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
+            if (Telegram)
+            alert(JSON.stringify(Telegram))
+            alert(JSON.stringify(window))
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
@@ -1283,8 +1286,8 @@
                 drawUniqueCreature("creatureCanvas", gameState.uniqueIdentifier, gameState.level, !gameState.isDead);
             }
             else {
-              console.log(gameState)
-              if (!gameState.uniqueIdentifier) {
+                console.log(gameState)
+                if (!gameState.uniqueIdentifier) {
                     function generarSemillaUnica() {
                         // 1. Base: Fecha y hora actual en milisegundos
                         const fechaActual = Date.now();
@@ -1327,13 +1330,13 @@
                     }
                     // 1. Generar semilla única
                     const semilla = generarSemillaUnica();
-                    
+
 
                     // 2. Crear generador con esa semilla
                     const rng = new GeneradorAleatorioConSemilla(semilla);
 
                     // 3. Generar números aleatorios reproducibles
-                    const randomId = rng.nextInt(1000000000,9999999999).toString()
+                    const randomId = rng.nextInt(1000000000, 9999999999).toString()
                     console.log(randomId)
                     gameState.uniqueIdentifier = randomId
                     console.log(gameState.uniqueIdentifier); // Ej: 42 (entre 1 y 100)
