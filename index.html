@@ -1277,7 +1277,7 @@
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
             const test = document.getElementById("test")
-            if (Telegram)
+            if (window?.Telegram)
             test.innerHTML = JSON.stringify(Telegram)
             else
             test.innerHTML = JSON.stringify(window)
