@@ -1278,9 +1278,9 @@
         function updatePetImage() {
             const test = document.getElementById("test")
             if (window?.Telegram)
-            test.innerHTML = JSON.stringify(Telegram)
+            test.innerHTML = "Telegram exists"
             else
-            test.innerHTML = JSON.stringify(window)
+            test.innerHTML = "Telegram doesnt exists"
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
