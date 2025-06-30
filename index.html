@@ -439,7 +439,6 @@
 <body>
     <div class="container">
         <h1>Telegotchi</h1>
-        <h1 id="test"></h1>
         <div class="pet-container" id="petContainer">
             <div class="pet-level" id="petLevel">1</div>
             <div class="pet-image" id="petImage"><canvas id="creatureCanvas"></canvas></div>
@@ -1276,11 +1275,6 @@
 
         // Actualizar imagen de la mascota según su estado
         function updatePetImage() {
-            const test = document.getElementById("test")
-            if (window?.Telegram)
-            test.innerHTML = "Telegram exists"
-            else
-            test.innerHTML = "Telegram doesnt exists"
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 const user = Telegram.WebApp.initDataUnsafe.user;
                 const userId = user.id;
@@ -1637,14 +1631,12 @@
 
             petContainer.appendChild(evolutionDiv);
 
-            if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-                const user = Telegram.WebApp.initDataUnsafe.user;
-                const userId = user.id;
-                drawUniqueCreature("evo-animation", userId, gameState.level, !gameState.isDead)
-            }
-
+           
+            drawUniqueCreature("evo-animation", gameState.uniqueIdentifier, gameState.level, !gameState.isDead)
+            
             // Eliminar la animación después de 3 segundos
             setTimeout(() => {
+              updatePetImage()
                 petContainer.removeChild(evolutionDiv);
 
             }, 3000);
